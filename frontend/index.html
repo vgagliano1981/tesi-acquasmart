@@ -164,8 +164,15 @@
                 </header>
                 <!-- Nuovo Form Inserimento Manuale -->
                 <div class="glass-panel" id="manual-entry-container" style="display: block; margin-bottom: 1.5rem; padding: 1.5rem;">
-                    <h3>Inserimento Consumi Reali (Manuale)</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Seleziona la scuola o cerca per codice meccanografico e inserisci il consumo idrico (in metri cubi) letto in bolletta per il periodo specificato.</p>
+                    <h3>Inserimento Consumi Reali (Bolletta)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Seleziona la scuola o cerca per codice meccanografico e inserisci il consumo idrico letto in bolletta per il periodo specificato. Puoi usare il tasto qui sotto per auto-compilare caricando il PDF.</p>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px dashed rgba(255,255,255,0.2);">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">Intelligenza Artificiale: Estrai dati da PDF Bolletta</label>
+                        <input type="file" id="pdf-bolletta-input" accept=".pdf" style="display: none;">
+                        <button class="btn" id="btn-upload-pdf" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem;"><i class="fas fa-file-pdf"></i> Carica PDF Bolletta (Auto-compilazione)</button>
+                        <span id="pdf-status" style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 10px;"></span>
+                    </div>
                     
                     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 600px;">
                         <div>
@@ -198,9 +205,16 @@
                                     <option value="l">Litri (L)</option>
                                 </select>
                             </div>
+                            <div style="flex: 0 0 150px;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Tariffa Idrica (€/m³):</label>
+                                <input type="number" id="manual-tariffa" step="0.01" value="2.50" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white;">
+                            </div>
                         </div>
 
-                        <button class="btn primary-btn" id="btn-confronta-manuale" style="margin-top: 0.5rem; align-self: flex-start;">🔍 Calcola ed Esegui Confronto</button>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <button class="btn primary-btn" id="btn-confronta-manuale">🔍 Calcola ed Esegui Confronto</button>
+                            <button class="btn" id="btn-salva-storico" style="background: var(--success); color: white; border: none; display: none;">💾 Salva nello Storico</button>
+                        </div>
                     </div>
 
                     <!-- Risultato Confronto -->
@@ -216,8 +230,12 @@
                                 <div class="value" id="res-consumo-simulato" style="color: #34d399;">0 L</div>
                             </div>
                             <div class="stat-card" style="flex: 1;">
-                                <h3>Differenza / Discrepanza</h3>
+                                <h3>Differenza (Dispersione)</h3>
                                 <div class="value" id="res-differenza">0 L</div>
+                            </div>
+                            <div class="stat-card" style="flex: 1; border-color: rgba(239, 68, 68, 0.3);">
+                                <h3>Danno Economico Stimato</h3>
+                                <div class="value" id="res-danno-euro" style="color: #ef4444;">0,00 €</div>
                             </div>
                         </div>
                     </div>
@@ -233,6 +251,11 @@
                     <button class="btn primary-btn" id="btn-upload" style="margin-top: 1rem; display: none;">Analizza Dati CSV</button>
                 </div>
                 
+                <div class="chart-container glass-panel" id="storico-bollette-container" style="margin-top: 2rem;">
+                    <h3>Analisi Storica Bollette vs IoT</h3>
+                    <canvas id="storicoBolletteChart"></canvas>
+                </div>
+
                 <div class="chart-container glass-panel" id="comparison-chart-container" style="display: none; margin-top: 2rem;">
                     <h3>Confronto Consumi</h3>
                     <canvas id="comparisonChart"></canvas>

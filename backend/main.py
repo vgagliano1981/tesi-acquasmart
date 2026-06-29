@@ -367,6 +367,83 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Errore durante l'elaborazione del CSV: {str(e)}")
 
+import re
+import PyPDF2
+
+@app.post("/api/upload_pdf_bolletta")
+async def upload_pdf_bolletta(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Il file deve essere un PDF.")
+    
+    contents = await file.read()
+    testo = ""
+    try:
+        reader = PyPDF2.PdfReader(io.BytesIO(contents))
+        for page in reader.pages:
+            testo += page.extract_text() + " "
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore lettura PDF: {str(e)}")
+        
+    date_pattern = r'\b(\d{2}[/-]\d{2}[/-]\d{4})\b'
+    consumo_pattern = r'\b(\d+[,.]\d+|\d+)\s*(?:mc|m3|metri\s*cubi)\b'
+    
+    date_trovate = re.findall(date_pattern, testo)
+    consumi_trovati = re.findall(consumo_pattern, testo, re.IGNORECASE)
+    
+    data_inizio = date_trovate[0] if len(date_trovate) > 0 else ""
+    data_fine = date_trovate[1] if len(date_trovate) > 1 else ""
+    consumo = consumi_trovati[0] if consumi_trovati else ""
+    if consumo:
+        consumo = consumo.replace(',', '.')
+        
+    return {
+        "success": True,
+        "data_inizio": data_inizio.replace('-', '/'),
+        "data_fine": data_fine.replace('-', '/'),
+        "consumo_mc": consumo
+    }
+
+@app.get("/api/storico_confronti")
+def storico_confronti(scuola_id: int = None, db: Session = Depends(get_db)):
+    query = db.query(models.DatoReale)
+    if scuola_id and scuola_id > 0:
+        scuola = db.query(models.Scuola).filter(models.Scuola.id == scuola_id).first()
+        if scuola:
+            query = query.filter(models.DatoReale.nome_scuola == scuola.nome)
+            
+    dati = query.order_by(models.DatoReale.data_inizio.asc()).all()
+    
+    risultati = []
+    for d in dati:
+        scuola_obj = db.query(models.Scuola).filter(models.Scuola.nome == d.nome_scuola).first()
+        consumo_simulato = 0.0
+        if scuola_obj:
+            sensore_main = db.query(models.Sensore).filter(
+                models.Sensore.scuola_id == scuola_obj.id,
+                models.Sensore.is_main == True
+            ).first()
+            if sensore_main:
+                prima_lettura = db.query(models.Lettura).filter(
+                    models.Lettura.sensore_id == sensore_main.id,
+                    models.Lettura.timestamp >= d.data_inizio
+                ).order_by(models.Lettura.timestamp.asc()).first()
+                ultima_lettura = db.query(models.Lettura).filter(
+                    models.Lettura.sensore_id == sensore_main.id,
+                    models.Lettura.timestamp <= d.data_fine
+                ).order_by(models.Lettura.timestamp.desc()).first()
+                
+                if prima_lettura and ultima_lettura and ultima_lettura.valore_litri >= prima_lettura.valore_litri:
+                    consumo_simulato = ultima_lettura.valore_litri - prima_lettura.valore_litri
+
+        risultati.append({
+            "id": d.id,
+            "periodo": f"{d.data_inizio.strftime('%m/%y')} - {d.data_fine.strftime('%m/%y')}",
+            "nome_scuola": d.nome_scuola,
+            "consumo_bolletta_litri": d.consumo * 1000, 
+            "consumo_simulato_litri": consumo_simulato
+        })
+    return risultati
+
 # Mount static files (Frontend HTML/CSS/JS)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 

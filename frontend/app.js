@@ -895,6 +895,37 @@ if (btnConfrontaManuale) {
                 diffEl.style.color = "var(--success)";
             }
             
+            // Danno Economico
+            const tariffa = parseFloat(document.getElementById('manual-tariffa').value) || 2.50;
+            const dannoEuro = differenzaMC * tariffa;
+            document.getElementById('res-danno-euro').textContent = `${dannoEuro.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+            
+            // Salva nello storico
+            const btnSalva = document.getElementById('btn-salva-storico');
+            btnSalva.style.display = 'inline-block';
+            btnSalva.onclick = async () => {
+                const selectEl = document.getElementById('manual-scuola-select');
+                const nomeScuolaCompleto = selectEl.options[selectEl.selectedIndex].text;
+                // Il testo della select è tipo "Liceo Galileo - ID 1" -> prendiamo la prima parte
+                const nomeScuola = nomeScuolaCompleto.split(' - ')[0].trim(); 
+                await fetch('/api/dati_reali', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        nome_scuola: nomeScuola,
+                        indirizzo_scuola: "N/A",
+                        codice_contratto_acqua: "N/A",
+                        codice_meccanografico: "N/A",
+                        data_inizio: startIso,
+                        data_fine: endIso,
+                        consumo: consumoRealeMC
+                    })
+                });
+                alert("Salvato nello storico con successo!");
+                btnSalva.style.display = 'none';
+                loadStoricoBollette();
+            };
+            
         } catch(e) {
             console.error("Errore confronto", e);
             alert("Si è verificato un errore durante il calcolo del confronto.");
@@ -939,3 +970,105 @@ async function initLiveClock() {
     }, 1000);
 }
 initLiveClock();
+
+// Logica PDF Upload
+const btnPdf = document.getElementById('btn-upload-pdf');
+const inputPdf = document.getElementById('pdf-bolletta-input');
+const statusPdf = document.getElementById('pdf-status');
+if (btnPdf && inputPdf) {
+    btnPdf.onclick = () => inputPdf.click();
+    inputPdf.onchange = async (e) => {
+        if (!e.target.files.length) return;
+        const file = e.target.files[0];
+        statusPdf.textContent = "Lettura AI in corso...";
+        
+        const fd = new FormData();
+        fd.append("file", file);
+        
+        try {
+            const res = await fetch('/api/upload_pdf_bolletta', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error("Errore lettura PDF");
+            const data = await res.json();
+            
+            if (data.data_inizio) {
+                // Formatta dd/mm/yyyy in yyyy-mm-dd
+                const parts = data.data_inizio.split('/');
+                if (parts.length === 3) document.getElementById('manual-data-inizio').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            if (data.data_fine) {
+                const parts = data.data_fine.split('/');
+                if (parts.length === 3) document.getElementById('manual-data-fine').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            if (data.consumo_mc) {
+                document.getElementById('manual-consumo').value = data.consumo_mc;
+                document.getElementById('manual-unita').value = 'mc';
+            }
+            statusPdf.textContent = "✅ Dati estratti con successo!";
+        } catch (err) {
+            statusPdf.textContent = "❌ Errore: PDF non leggibile.";
+        }
+    };
+}
+
+// Logica Grafico Storico
+let storicoChart = null;
+async function loadStoricoBollette() {
+    const ctx = document.getElementById('storicoBolletteChart');
+    if (!ctx) return;
+    
+    // Potremmo filtrare per scuola, ma ora carichiamo tutto
+    const scuolaSelect = document.getElementById('manual-scuola-select');
+    const scuolaId = scuolaSelect ? scuolaSelect.value : "";
+    
+    try {
+        // Se non è stata selezionata una scuola specifica dal form Dati Reali, non passiamo scuola_id
+        const res = await fetch(`/api/storico_confronti?scuola_id=${scuolaId}`);
+        const dati = await res.json();
+        
+        const labels = dati.map(d => d.periodo + " (" + d.nome_scuola + ")");
+        const consumiBolletta = dati.map(d => d.consumo_bolletta_litri);
+        const consumiSensori = dati.map(d => d.consumo_simulato_litri);
+        
+        if (storicoChart) storicoChart.destroy();
+        
+        storicoChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Fatturato in Bolletta (Litri)',
+                        data: consumiBolletta,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Rilevato dai Sensori (Litri)',
+                        data: consumiSensori,
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Litri' } }
+                }
+            }
+        });
+    } catch(e) {
+        console.error("Errore caricamento storico", e);
+    }
+}
+// Carichiamo lo storico quando si apre la tab Dati Reali o si cambia la scuola
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.getAttribute('data-view') === 'dati-reali') {
+            loadStoricoBollette();
+        }
+    });
+});
+document.getElementById('manual-scuola-select')?.addEventListener('change', loadStoricoBollette);
