@@ -943,7 +943,7 @@ async function initLiveClock() {
     let timeOffset = 0;
     try {
         // Fetch dell'ora ufficiale da internet
-        const res = await fetch('http://worldtimeapi.org/api/timezone/Europe/Rome');
+        const res = await fetch('https://worldtimeapi.org/api/timezone/Europe/Rome');
         if (res.ok) {
             const data = await res.json();
             const serverTime = new Date(data.datetime).getTime();
@@ -1109,3 +1109,77 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     });
 });
 document.getElementById('manual-scuola-select')?.addEventListener('change', loadStoricoBollette);
+// Logica Modale Ricerca
+const searchModal = document.getElementById('searchModal');
+const btnOpenSearch = document.getElementById('btn-open-search');
+const btnCloseSearch = document.getElementById('btn-close-search');
+const btnExecuteSearch = document.getElementById('btn-execute-search');
+
+if (btnOpenSearch && searchModal) {
+    btnOpenSearch.onclick = () => {
+        searchModal.style.display = 'flex';
+        // Popola la select delle scuole nel modale
+        const select = document.getElementById('search-school-selector');
+        const mainSelect = document.getElementById('dashboard-school-selector');
+        if (select && mainSelect && select.options.length <= 1) {
+            select.innerHTML = mainSelect.innerHTML;
+        }
+    };
+}
+if (btnCloseSearch && searchModal) {
+    btnCloseSearch.onclick = () => {
+        searchModal.style.display = 'none';
+    };
+}
+if (btnExecuteSearch) {
+    btnExecuteSearch.onclick = async () => {
+        const scuolaId = document.getElementById('search-school-selector').value;
+        const dateVal = document.getElementById('search-date').value;
+        const timeVal = document.getElementById('search-time').value;
+        
+        if (!dateVal || !timeVal) {
+            alert("Inserisci Data e Ora per effettuare la ricerca.");
+            return;
+        }
+        
+        const targetTime = `${dateVal}T${timeVal}:00`;
+        let url = `/api/ricerca_misurazione?target_time=${targetTime}`;
+        if (scuolaId) {
+            url += `&scuola_id=${scuolaId}`;
+        }
+        
+        const tbody = document.getElementById('search-results-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Ricerca in corso...</td></tr>';
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            if (!data || data.length === 0) {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nessun dato trovato per questo orario.</td></tr>';
+                return;
+            }
+            
+            if (tbody) tbody.innerHTML = '';
+            data.forEach(d => {
+                const tr = document.createElement('tr');
+                const dt = new Date(d.timestamp);
+                const statusBadge = d.is_anomalia ? 
+                    '<span class="badge anomalia">Anomalia</span>' : 
+                    '<span class="badge normal">Normale</span>';
+                
+                tr.innerHTML = `
+                    <td>${dt.toLocaleDateString()} ${dt.toLocaleTimeString()}</td>
+                    <td><strong>${d.scuola_nome}</strong><br><small>${d.sensore_nome}</small></td>
+                    <td><strong>${d.valore_litri.toFixed(2)} L/min</strong></td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+        } catch (err) {
+            console.error("Errore ricerca", err);
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Errore durante la ricerca.</td></tr>';
+        }
+    };
+}
