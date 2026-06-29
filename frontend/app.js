@@ -1035,7 +1035,11 @@ async function loadStoricoBollette() {
     const tariffa = parseFloat(document.getElementById('manual-tariffa')?.value) || 2.50;
     
     try {
-        const res = await fetch(`/api/storico_confronti?scuola_id=${scuolaId}`);
+        let url = '/api/storico_confronti';
+        if (scuolaId) {
+            url += `?scuola_id=${scuolaId}`;
+        }
+        const res = await fetch(url);
         const dati = await res.json();
         
         tableBody.innerHTML = '';
