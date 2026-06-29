@@ -88,5 +88,14 @@ def start_mqtt():
     client.on_connect = on_connect
     client.on_message = on_message
     
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    import time
+    while True:
+        try:
+            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            print("Client MQTT FastAPI connesso con successo!")
+            break
+        except Exception as e:
+            print(f"Errore connessione MQTT backend: {e}. Riprovo tra 5 secondi...")
+            time.sleep(5)
+            
     client.loop_start() # Run in background

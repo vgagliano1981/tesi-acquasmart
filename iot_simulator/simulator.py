@@ -30,9 +30,17 @@ def get_scuole_sensori():
         return {}
 
 def start_simulation():
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "Simulator_Catania_Adv")
-    print("Connessione al broker MQTT in corso...")
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    while True:
+        try:
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "Simulator_Catania_Adv")
+            print("Connessione al broker MQTT in corso...")
+            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            break
+        except Exception as e:
+            print(f"Errore connessione MQTT: {e}. Riprovo tra 10 secondi...")
+            time.sleep(10)
+            
+    client.loop_start()
     
     print("Avvio simulazione invio dati per TUTTE le scuole (CTRL+C per fermare)")
     base_sub_consumption = 3.0 # litri al min per sotto-sensore

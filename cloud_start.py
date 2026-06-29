@@ -33,21 +33,40 @@ def populate_if_empty():
     except Exception as e:
         print("Errore nel popolamento:", e)
 
-def run_simulator():
-    print("Avvio del simulatore in background (attesa 15 secondi per far avviare prima il server web)...")
+def run_simulator(port):
+    print("Attendiamo che il server web sia online (Polling locale) prima di avviare il simulatore...")
     import time
-    time.sleep(15)
+    import urllib.request
+    
+    server_pronto = False
+    for _ in range(60): # Aspetta massimo 2 minuti (60 * 2s)
+        try:
+            req = urllib.request.urlopen(f"http://127.0.0.1:{port}/")
+            if req.getcode() == 200:
+                server_pronto = True
+                break
+        except Exception:
+            pass
+        time.sleep(2)
+        
+    if server_pronto:
+        print("Server web online! Attendo altri 5 secondi per garantire la connessione MQTT...")
+        time.sleep(5)
+    else:
+        print("Timeout attesa server web. Avvio comunque il simulatore.")
+        
     import iot_simulator.simulator
     iot_simulator.simulator.start_simulation()
 
 if __name__ == "__main__":
     populate_if_empty()
     
+    port = int(os.environ.get("PORT", 10000))
+    
     # Avvia il simulatore in un thread separato in background
-    sim_thread = threading.Thread(target=run_simulator, daemon=True)
+    sim_thread = threading.Thread(target=run_simulator, args=(port,), daemon=True)
     sim_thread.start()
     
     # Avvia il server web FastAPI
-    port = int(os.environ.get("PORT", 10000))
     print(f"Avvio server Web sulla porta {port}...")
     uvicorn.run("backend.main:app", host="0.0.0.0", port=port)
