@@ -1,3 +1,12 @@
+// Clock logic
+setInterval(() => {
+    const clockEl = document.getElementById('live-clock');
+    if (clockEl) {
+        const now = new Date();
+        clockEl.innerText = now.toLocaleString('it-IT');
+    }
+}, 1000);
+
 // Navigation Logic
 document.querySelectorAll('.nav-item').forEach(button => {
     button.addEventListener('click', () => {
