@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/20DOMContentLoaded/2000/svg" viewBox="0 0 100 120">
+  <!-- Crest background -->
+  <path d="M 10 10 L 90 10 L 90 70 Q 50 120 10 70 Z" fill="#b91d47" stroke="#d4af37" stroke-width="4"/>
+  <!-- Crown -->
+  <path d="M 20 10 L 20 -10 L 30 0 L 40 -15 L 50 0 L 60 -15 L 70 0 L 80 -10 L 80 10 Z" fill="#d4af37" />
+  <!-- Elephant (simplified) -->
+  <circle cx="65" cy="50" r="15" fill="#555"/>
+  <rect x="50" y="50" width="30" height="25" fill="#555"/>
+  <rect x="50" y="70" width="8" height="20" fill="#555"/>
+  <rect x="70" y="70" width="8" height="20" fill="#555"/>
+  <path d="M 75 50 Q 95 30 90 60" fill="none" stroke="#555" stroke-width="6" stroke-linecap="round"/>
+  <!-- Text CT -->
+  <text x="50" y="45" font-family="Arial" font-size="28" font-weight="bold" fill="white" text-anchor="middle">CT</text>
+</svg>
