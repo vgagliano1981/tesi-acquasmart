@@ -20,8 +20,32 @@ document.querySelectorAll('.nav-item').forEach(button => {
         document.getElementById(viewId).classList.add('active');
         
         if (viewId === 'anagrafe') loadSchools();
+        if (viewId === 'dashboard') {
+            const dashboardSelector = document.getElementById('dashboard-school-selector');
+            if (dashboardSelector && dashboardSelector.value !== "") {
+                dashboardSelector.value = "";
+                dashboardSelector.dispatchEvent(new Event('change'));
+            }
+        }
     });
 });
+
+// Inactivity Timer for Dashboard Reset (5 minutes)
+let inactivityTimer;
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+        const dashboardSelector = document.getElementById('dashboard-school-selector');
+        if (dashboardSelector && dashboardSelector.value !== "") {
+            dashboardSelector.value = "";
+            dashboardSelector.dispatchEvent(new Event('change'));
+        }
+    }, 5 * 60 * 1000);
+}
+['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer);
+});
+resetInactivityTimer();
 
 // Chart.js Setup
 const ctx = document.getElementById('liveChart').getContext('2d');
