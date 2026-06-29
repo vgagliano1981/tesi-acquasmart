@@ -167,11 +167,18 @@
                     <h3>Inserimento Consumi Reali (Bolletta)</h3>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Seleziona la scuola o cerca per codice meccanografico e inserisci il consumo idrico letto in bolletta per il periodo specificato. Puoi usare il tasto qui sotto per auto-compilare caricando il PDF.</p>
                     
-                    <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px dashed rgba(255,255,255,0.2);">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">Intelligenza Artificiale: Estrai dati da PDF Bolletta</label>
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 2px dashed rgba(59, 130, 246, 0.5);">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; font-size: 1.1rem; color: var(--accent);"><i class="fas fa-robot"></i> Intelligenza Artificiale: Lettura PDF Bolletta</label>
+                        <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 1rem;">Carica il PDF originale della fattura. Il sistema proverà ad estrarre le date e i consumi in automatico per risparmiarti tempo.</p>
                         <input type="file" id="pdf-bolletta-input" accept=".pdf" style="display: none;">
-                        <button class="btn" id="btn-upload-pdf" style="background: var(--accent); color: white; border: none; padding: 0.5rem 1rem;"><i class="fas fa-file-pdf"></i> Carica PDF Bolletta (Auto-compilazione)</button>
-                        <span id="pdf-status" style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 10px;"></span>
+                        <button class="btn" id="btn-upload-pdf" style="background: var(--accent); color: white; border: none; padding: 0.75rem 1.5rem; font-size: 1rem;"><i class="fas fa-file-pdf"></i> Carica PDF Bolletta</button>
+                        
+                        <div id="pdf-feedback-alert" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; color: #10b981;">
+                            <strong>✅ PDF Letto con Successo!</strong><br>
+                            I dati sono stati inseriti automaticamente nelle caselle qui sotto.<br>
+                            <span style="color: white; font-size: 0.9rem;">👉 Ora controllali, clicca su <strong>"Calcola ed Esegui Confronto"</strong> e infine <strong>"Salva nello Storico"</strong> per registrarli.</span>
+                        </div>
+                        <span id="pdf-status" style="font-size: 0.85rem; color: var(--danger); margin-left: 10px;"></span>
                     </div>
                     
                     <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 600px;">
@@ -251,9 +258,32 @@
                     <button class="btn primary-btn" id="btn-upload" style="margin-top: 1rem; display: none;">Analizza Dati CSV</button>
                 </div>
                 
-                <div class="chart-container glass-panel" id="storico-bollette-container" style="margin-top: 2rem;">
-                    <h3>Analisi Storica Bollette vs IoT</h3>
-                    <canvas id="storicoBolletteChart"></canvas>
+                <div class="glass-panel" id="storico-bollette-container" style="margin-top: 2rem;">
+                    <h3>Registro Storico Bollette</h3>
+                    <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                                    <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Periodo</th>
+                                    <th style="padding: 1rem 0.5rem; color: var(--text-secondary);">Scuola</th>
+                                    <th style="padding: 1rem 0.5rem; color: #60a5fa;">Consumo Bolletta</th>
+                                    <th style="padding: 1rem 0.5rem; color: #34d399;">Rilevato Sensori</th>
+                                    <th style="padding: 1rem 0.5rem; color: var(--warning);">Dispersione (L)</th>
+                                    <th style="padding: 1rem 0.5rem; color: var(--danger);">Danno (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="storico-table-body">
+                                <!-- Righe popolate dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                        <h4>Trend Danno Economico / Perdite Occulte</h4>
+                        <div style="height: 250px; margin-top: 1rem;">
+                            <canvas id="trendDanniChart"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="chart-container glass-panel" id="comparison-chart-container" style="display: none; margin-top: 2rem;">

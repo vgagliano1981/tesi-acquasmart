@@ -1002,62 +1002,96 @@ if (btnPdf && inputPdf) {
                 document.getElementById('manual-consumo').value = data.consumo_mc;
                 document.getElementById('manual-unita').value = 'mc';
             }
-            statusPdf.textContent = "✅ Dati estratti con successo!";
+            statusPdf.textContent = "";
+            const feedbackAlert = document.getElementById('pdf-feedback-alert');
+            if(feedbackAlert) {
+                feedbackAlert.style.display = 'block';
+                // Animazione visiva per i campi aggiornati
+                ['manual-data-inizio', 'manual-data-fine', 'manual-consumo'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.style.transition = 'background-color 0.5s';
+                        el.style.backgroundColor = 'rgba(16, 185, 129, 0.4)';
+                        setTimeout(() => { el.style.backgroundColor = 'rgba(0,0,0,0.5)'; }, 2000);
+                    }
+                });
+            }
         } catch (err) {
             statusPdf.textContent = "❌ Errore: PDF non leggibile.";
         }
     };
 }
 
-// Logica Grafico Storico
-let storicoChart = null;
+// Logica Grafico Storico (Tabella + Trend)
+let trendChart = null;
 async function loadStoricoBollette() {
-    const ctx = document.getElementById('storicoBolletteChart');
-    if (!ctx) return;
+    const tableBody = document.getElementById('storico-table-body');
+    const ctxTrend = document.getElementById('trendDanniChart');
+    if (!tableBody) return;
     
-    // Potremmo filtrare per scuola, ma ora carichiamo tutto
     const scuolaSelect = document.getElementById('manual-scuola-select');
     const scuolaId = scuolaSelect ? scuolaSelect.value : "";
+    const tariffa = parseFloat(document.getElementById('manual-tariffa')?.value) || 2.50;
     
     try {
-        // Se non è stata selezionata una scuola specifica dal form Dati Reali, non passiamo scuola_id
         const res = await fetch(`/api/storico_confronti?scuola_id=${scuolaId}`);
         const dati = await res.json();
         
-        const labels = dati.map(d => d.periodo + " (" + d.nome_scuola + ")");
-        const consumiBolletta = dati.map(d => d.consumo_bolletta_litri);
-        const consumiSensori = dati.map(d => d.consumo_simulato_litri);
+        tableBody.innerHTML = '';
         
-        if (storicoChart) storicoChart.destroy();
+        const labels = [];
+        const danni = [];
         
-        storicoChart = new Chart(ctx, {
-            type: 'bar',
+        dati.forEach(d => {
+            const bollettaMc = d.consumo_bolletta_litri / 1000;
+            const simulatoMc = d.consumo_simulato_litri / 1000;
+            const diffLitri = Math.abs(d.consumo_bolletta_litri - d.consumo_simulato_litri);
+            const danno = (diffLitri / 1000) * tariffa;
+            
+            labels.push(d.periodo);
+            danni.push(danno);
+            
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+            tr.innerHTML = `
+                <td style="padding: 1rem 0.5rem;">${d.periodo}</td>
+                <td style="padding: 1rem 0.5rem;"><strong>${d.nome_scuola}</strong></td>
+                <td style="padding: 1rem 0.5rem; color: #60a5fa;">${bollettaMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³</td>
+                <td style="padding: 1rem 0.5rem; color: #34d399;">${simulatoMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³</td>
+                <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffLitri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</td>
+                <td style="padding: 1rem 0.5rem; color: var(--danger); font-weight: bold;">${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+        
+        if (!ctxTrend) return;
+        if (trendChart) trendChart.destroy();
+        
+        trendChart = new Chart(ctxTrend, {
+            type: 'line',
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: 'Fatturato in Bolletta (Litri)',
-                        data: consumiBolletta,
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Rilevato dai Sensori (Litri)',
-                        data: consumiSensori,
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                        borderColor: 'rgba(16, 185, 129, 1)',
-                        borderWidth: 1
-                    }
-                ]
+                datasets: [{
+                    label: 'Trend Danno Economico Stimato (€)',
+                    data: danni,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#ef4444',
+                    pointRadius: 5
+                }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Litri' } }
+                    y: { beginAtZero: true, title: { display: true, text: 'Euro (€)' } }
                 }
             }
         });
+        
     } catch(e) {
         console.error("Errore caricamento storico", e);
     }
