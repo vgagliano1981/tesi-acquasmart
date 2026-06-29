@@ -119,7 +119,7 @@ def start_simulation():
                     client.publish(c_sensor["topic"], json.dumps(payload))
             
             # Attende prima di un nuovo ciclo globale
-            time.sleep(5)
+            time.sleep(600)
     except KeyboardInterrupt:
         print("Simulazione interrotta.")
         client.disconnect()
