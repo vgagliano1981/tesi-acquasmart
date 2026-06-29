@@ -177,8 +177,8 @@ async function fetchLetture() {
         liveChart.data.datasets = [];
         
         const colorPalette = [
-            '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', 
-            '#06b6d4', '#84cc16', '#f43f5e', '#6366f1', '#14b8a6'
+            '#FF3333', '#33FF33', '#3333FF', '#FFFF33', '#FF33FF', 
+            '#33FFFF', '#FF9933', '#9933FF', '#A0522D', '#FF1493'
         ];
 
         let colorIndex = 0;
