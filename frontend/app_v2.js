@@ -903,3 +903,38 @@ if (btnConfrontaManuale) {
         }
     });
 }
+
+// Orologio Live Sincronizzato con Internet
+async function initLiveClock() {
+    const clockEl = document.getElementById('live-clock');
+    if (!clockEl) return;
+    
+    let timeOffset = 0;
+    try {
+        // Fetch dell'ora ufficiale da internet
+        const res = await fetch('http://worldtimeapi.org/api/timezone/Europe/Rome');
+        if (res.ok) {
+            const data = await res.json();
+            const serverTime = new Date(data.datetime).getTime();
+            const localTime = Date.now();
+            timeOffset = serverTime - localTime;
+        }
+    } catch(e) {
+        console.warn("Impossibile recuperare l'ora da internet, utilizzo l'orario locale.");
+    }
+    
+    setInterval(() => {
+        const now = new Date(Date.now() + timeOffset);
+        
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        clockEl.textContent = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    }, 1000);
+}
+initLiveClock();
