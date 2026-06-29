@@ -34,7 +34,9 @@ def populate_if_empty():
         print("Errore nel popolamento:", e)
 
 def run_simulator():
-    print("Avvio del simulatore in background...")
+    print("Avvio del simulatore in background (attesa 15 secondi per far avviare prima il server web)...")
+    import time
+    time.sleep(15)
     import iot_simulator.simulator
     iot_simulator.simulator.start_simulation()
 
