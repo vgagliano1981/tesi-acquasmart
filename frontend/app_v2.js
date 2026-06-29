@@ -919,8 +919,8 @@ if (btnConfrontaManuale) {
             btnSalva.onclick = async () => {
                 const selectEl = document.getElementById('manual-scuola-select');
                 const nomeScuolaCompleto = selectEl.options[selectEl.selectedIndex].text;
-                // Il testo della select è tipo "Liceo Galileo - ID 1" -> prendiamo la prima parte
-                const nomeScuola = nomeScuolaCompleto.split(' - ')[0].trim(); 
+                // Il testo della select è tipo "Liceo Galileo (CT12345)" -> prendiamo la prima parte
+                const nomeScuola = nomeScuolaCompleto.split(' (')[0].trim(); 
                 await fetch('/api/dati_reali', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -1036,11 +1036,9 @@ if (btnPdf && inputPdf) {
     };
 }
 
-// Logica Grafico Storico (Tabella + Trend)
-let trendChart = null;
+// Logica Storico (Elenco Lista)
 async function loadStoricoBollette() {
     const tableBody = document.getElementById('storico-table-body');
-    const ctxTrend = document.getElementById('trendDanniChart');
     if (!tableBody) return;
     
     const scuolaSelect = document.getElementById('manual-scuola-select');
@@ -1057,17 +1055,11 @@ async function loadStoricoBollette() {
         
         tableBody.innerHTML = '';
         
-        const labels = [];
-        const danni = [];
-        
         dati.forEach(d => {
             const bollettaMc = d.consumo_bolletta_litri / 1000;
             const simulatoMc = d.consumo_simulato_litri / 1000;
             const diffLitri = Math.abs(d.consumo_bolletta_litri - d.consumo_simulato_litri);
             const danno = (diffLitri / 1000) * tariffa;
-            
-            labels.push(d.periodo);
-            danni.push(danno);
             
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
@@ -1080,34 +1072,6 @@ async function loadStoricoBollette() {
                 <td style="padding: 1rem 0.5rem; color: var(--danger); font-weight: bold;">${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
             `;
             tableBody.appendChild(tr);
-        });
-        
-        if (!ctxTrend) return;
-        if (trendChart) trendChart.destroy();
-        
-        trendChart = new Chart(ctxTrend, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Trend Danno Economico Stimato (€)',
-                    data: danni,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.3,
-                    pointBackgroundColor: '#ef4444',
-                    pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Euro (€)' } }
-                }
-            }
         });
         
     } catch(e) {
