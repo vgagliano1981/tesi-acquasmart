@@ -838,10 +838,11 @@ if (btnConfrontaManuale) {
         const scuolaId = document.getElementById('manual-scuola-select').value;
         const dataInizio = document.getElementById('manual-data-inizio').value;
         const dataFine = document.getElementById('manual-data-fine').value;
-        const consumoRealeMC = parseFloat(document.getElementById('manual-consumo').value.replace(',', '.'));
+        const inputValue = parseFloat(document.getElementById('manual-consumo').value.replace(',', '.'));
+        const unita = document.getElementById('manual-unita').value;
 
-        if (!scuolaId || !dataInizio || !dataFine || isNaN(consumoRealeMC)) {
-            alert(`Attenzione! Compila tutti i campi:\nScuola: ${scuolaId}\nData Inizio: ${dataInizio}\nData Fine: ${dataFine}\nConsumo: ${consumoRealeMC}`);
+        if (!scuolaId || !dataInizio || !dataFine || isNaN(inputValue)) {
+            alert(`Attenzione! Compila tutti i campi:\nScuola: ${scuolaId}\nData Inizio: ${dataInizio}\nData Fine: ${dataFine}\nConsumo: Errato`);
             return;
         }
 
@@ -859,22 +860,36 @@ if (btnConfrontaManuale) {
             const data = await response.json();
 
             // Calcolo e conversione
-            const consumoRealeLitri = consumoRealeMC * 1000; // 1 m³ = 1000 Litri
+            const consumoRealeLitri = unita === 'mc' ? inputValue * 1000 : inputValue;
+            const consumoRealeMC = unita === 'mc' ? inputValue : inputValue / 1000;
+            
             const consumoSimulatoLitri = data.consumo_simulato_litri || 0;
-            const differenza = Math.abs(consumoRealeLitri - consumoSimulatoLitri);
+            const consumoSimulatoMC = consumoSimulatoLitri / 1000;
+            
+            const differenzaLitri = Math.abs(consumoRealeLitri - consumoSimulatoLitri);
+            const differenzaMC = Math.abs(consumoRealeMC - consumoSimulatoMC);
 
             // Mostra risultati
             document.getElementById('manual-result-container').style.display = 'block';
             
-            document.getElementById('res-consumo-reale').textContent = `${consumoRealeLitri.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L`;
-            document.getElementById('res-consumo-simulato').textContent = `${consumoSimulatoLitri.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L`;
+            document.getElementById('res-consumo-reale').innerHTML = `
+                ${consumoRealeLitri.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L<br>
+                <span style="font-size: 0.8rem; color: #9ca3af;">${consumoRealeMC.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} m³</span>
+            `;
+            document.getElementById('res-consumo-simulato').innerHTML = `
+                ${consumoSimulatoLitri.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L<br>
+                <span style="font-size: 0.8rem; color: #9ca3af;">${consumoSimulatoMC.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} m³</span>
+            `;
             
             const diffEl = document.getElementById('res-differenza');
-            diffEl.textContent = `${differenza.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L`;
+            diffEl.innerHTML = `
+                ${differenzaLitri.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} L<br>
+                <span style="font-size: 0.8rem; color: #9ca3af;">${differenzaMC.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} m³</span>
+            `;
             
             // Colore differenza in base alla tolleranza (es. 10%)
             const tolleranza = consumoRealeLitri * 0.10;
-            if (differenza > tolleranza) {
+            if (differenzaLitri > tolleranza) {
                 diffEl.style.color = "var(--danger)";
             } else {
                 diffEl.style.color = "var(--success)";
