@@ -7,3 +7,4 @@ pandas
 jinja2
 python-multipart
 PyPDF2
+psycopg2-binary
