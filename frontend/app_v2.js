@@ -634,50 +634,55 @@ const uploadArea = document.getElementById('upload-area');
 const fileInput = document.getElementById('file-input');
 const btnUpload = document.getElementById('btn-upload');
 
-uploadArea.addEventListener('click', () => fileInput.click());
-uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
-uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = 'var(--text-secondary)');
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.style.borderColor = 'var(--text-secondary)';
-    if(e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        uploadArea.querySelector('p').innerText = fileInput.files[0].name;
-        btnUpload.style.display = 'block';
-    }
-});
+if (uploadArea && fileInput) {
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
+    uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = 'var(--text-secondary)');
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--text-secondary)';
+        if(e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            uploadArea.querySelector('p').innerText = fileInput.files[0].name;
+            if(btnUpload) btnUpload.style.display = 'block';
+        }
+    });
 
-fileInput.addEventListener('change', () => {
-    if(fileInput.files.length > 0) {
-        uploadArea.querySelector('p').innerText = fileInput.files[0].name;
-        btnUpload.style.display = 'block';
-    }
-});
+    fileInput.addEventListener('change', () => {
+        if(fileInput.files.length > 0) {
+            uploadArea.querySelector('p').innerText = fileInput.files[0].name;
+            if(btnUpload) btnUpload.style.display = 'block';
+        }
+    });
+}
 
-btnUpload.addEventListener('click', async () => {
-    if(fileInput.files.length === 0) return;
-    
-    const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
-    
-    btnUpload.innerText = "Caricamento...";
-    try {
-        const response = await fetch('/api/upload_csv', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        alert(result.message + ` (${result.righe} righe analizzate)`);
-        btnUpload.innerText = "Analizza Dati";
-        // Show comparison chart demo
-        document.getElementById('comparison-chart-container').style.display = 'block';
-        renderComparisonChart();
-    } catch (e) {
-        console.error(e);
-        alert("Errore nell'upload");
-        btnUpload.innerText = "Analizza Dati";
-    }
-});
+if (btnUpload && fileInput) {
+    btnUpload.addEventListener('click', async () => {
+        if(fileInput.files.length === 0) return;
+        
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        
+        btnUpload.innerText = "Caricamento...";
+        try {
+            const response = await fetch('/api/upload_csv', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            alert(result.message + ` (${result.righe} righe analizzate)`);
+            btnUpload.innerText = "Analizza Dati";
+            // Show comparison chart demo
+            const container = document.getElementById('comparison-chart-container');
+            if (container) container.style.display = 'block';
+            renderComparisonChart();
+        } catch (e) {
+            console.error(e);
+            alert("Errore nell'upload");
+            btnUpload.innerText = "Analizza Dati";
+        }
+    });
+}
 
 // Manual Entry Logic
 const btnManualEntry = document.getElementById('btn-manual-entry');
