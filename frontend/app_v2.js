@@ -959,7 +959,15 @@ if (btnConfrontaManuale) {
                     })
                 });
                 alert("Salvato nello storico con successo!");
+                
+                // Hide temporary results and the button
+                document.getElementById('manual-result-container').style.display = 'none';
                 btnSalva.style.display = 'none';
+                
+                // Clear the school select to force displaying ALL history
+                const manualScuolaSelect = document.getElementById('manual-scuola-select');
+                if (manualScuolaSelect) manualScuolaSelect.value = '';
+                
                 loadStoricoBollette();
             };
             
@@ -1071,8 +1079,9 @@ async function loadStoricoBollette() {
     
     try {
         let url = '/api/storico_confronti';
+        url += `?t=${new Date().getTime()}`;
         if (scuolaId) {
-            url += `?scuola_id=${scuolaId}`;
+            url += `&scuola_id=${scuolaId}`;
         }
         const res = await fetch(url);
         const dati = await res.json();
