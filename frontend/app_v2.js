@@ -3,7 +3,7 @@ setInterval(() => {
     const clockEl = document.getElementById('live-clock');
     if (clockEl) {
         const now = new Date();
-        clockEl.innerText = now.toLocaleString('it-IT');
+        clockEl.innerText = now.toLocaleString('it-IT').replace(',', '');
     }
 }, 1000);
 
@@ -401,7 +401,7 @@ async function checkAllarmi() {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${new Date(a.timestamp).toLocaleString()}</td>
+                    <td>${new Date(a.timestamp).toLocaleString().replace(',', '')}</td>
                     <td><strong>${a.scuola_nome}</strong><br><small>${a.sensore_nome}</small></td>
                     <td style="color: var(--danger); font-weight: bold;">${a.valore_litri.toFixed(2)} ${unita}</td>
                     <td>${causaMsg}</td>
@@ -851,7 +851,7 @@ if(btnExecuteSearch) {
                     '<span class="badge normal" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Normale</span>';
                     
                 tr.innerHTML = `
-                    <td>${new Date(d.timestamp).toLocaleString()}</td>
+                    <td>${new Date(d.timestamp).toLocaleString().replace(',', '')}</td>
                     <td><strong>${d.scuola_nome}</strong><br><small style="color: var(--text-secondary)">${d.sensore_nome}</small></td>
                     <td><strong>${d.valore_litri.toFixed(2)}</strong></td>
                     <td>${statusBadge}</td>
