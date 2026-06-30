@@ -269,10 +269,10 @@ async function fetchAggregati() {
         const elGiornaliero = document.getElementById('valore-giornaliero');
         const elSettimanale = document.getElementById('valore-settimanale');
         const elMensile = document.getElementById('valore-mensile');
-        if (elOrario) elOrario.innerText = `${data.consumo_orario.toFixed(0)} L`;
-        if (elGiornaliero) elGiornaliero.innerText = `${data.consumo_giornaliero.toFixed(0)} L`;
-        if (elSettimanale) elSettimanale.innerText = `${data.consumo_settimanale.toFixed(0)} L`;
-        if (elMensile) elMensile.innerText = `${data.consumo_mensile.toFixed(0)} L`;
+        if (elOrario) elOrario.innerHTML = `${(data.consumo_orario / 1000).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${data.consumo_orario.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span>`;
+        if (elGiornaliero) elGiornaliero.innerHTML = `${(data.consumo_giornaliero / 1000).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${data.consumo_giornaliero.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span>`;
+        if (elSettimanale) elSettimanale.innerHTML = `${(data.consumo_settimanale / 1000).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${data.consumo_settimanale.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span>`;
+        if (elMensile) elMensile.innerHTML = `${(data.consumo_mensile / 1000).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${data.consumo_mensile.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span>`;
     } catch(e) {
         console.error("Errore recupero aggregati", e);
     }
