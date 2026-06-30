@@ -30,6 +30,8 @@ def on_message(client, userdata, msg):
             db.commit()
             db.refresh(sensore)
             
+        now = datetime.now()
+        
         # Analyze Anomaly based on sensor type
         if sensore.tipo == "Pressione":
             is_anomalia = bool(valore < 1.5 or valore > 3.0)
@@ -42,13 +44,13 @@ def on_message(client, userdata, msg):
             score = 1.0 if is_anomalia else 0.0
         else:
             # Per l'acqua usiamo il machine learning
-            is_anomalia, score = detector.predict(valore)
+            is_anomalia, score = detector.predict(valore, now)
             is_anomalia = bool(is_anomalia)
             score = float(score)
             
         lettura = Lettura(
             sensore_id=sensore.id,
-            timestamp=datetime.now(),
+            timestamp=now,
             valore_litri=valore,
             is_anomalia=is_anomalia,
             anomaly_score=score
