@@ -1,3 +1,58 @@
+// Auth Check & Role Setup
+const token = localStorage.getItem('token');
+const role = localStorage.getItem('role');
+
+if (!token) {
+    window.location.href = 'login.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (role === 'amministratore') {
+        const utentiBtn = document.getElementById('nav-btn-utenti');
+        if(utentiBtn) utentiBtn.style.display = 'block';
+    }
+
+    const logoutBtn = document.getElementById('nav-btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    }
+
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newUsername = document.getElementById('new-username').value;
+            const newPassword = document.getElementById('new-password').value;
+            const newRole = document.getElementById('new-role').value;
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ username: newUsername, password: newPassword, role: newRole })
+                });
+                const data = await res.json();
+                const msgEl = document.getElementById('user-msg');
+                if (res.ok) {
+                    msgEl.style.color = '#10b981';
+                    msgEl.innerText = data.message;
+                    createUserForm.reset();
+                } else {
+                    msgEl.style.color = '#ef4444';
+                    msgEl.innerText = data.detail || 'Errore nella creazione.';
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        });
+    }
+});
+
 // Clock logic
 setInterval(() => {
     const clockEl = document.getElementById('live-clock');
@@ -548,8 +603,10 @@ async function loadSchools() {
                 <td>${s.codice_meccanografico || '-'}</td>
                 <td>${s.numero_studenti}</td>
                 <td>
+                    ${role === 'amministratore' ? `
                     <button class="btn" style="padding: 0.2rem 0.5rem; background: transparent; border: 1px solid var(--accent); color: var(--accent); margin-right: 5px;" onclick="addSensor(${s.id}, '${s.nome.replace(/'/g, "\\'")}')">+ Sensore</button>
                     <button class="btn" style="padding: 0.2rem 0.5rem; background: transparent; border: 1px solid var(--danger); color: var(--danger)" onclick="deleteSchool(${s.id})">Elimina</button>
+                    ` : '<span style="color:var(--text-secondary)">Lettura</span>'}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -617,22 +674,41 @@ document.getElementById('dashboard-school-selector').addEventListener('change', 
     fetchSensori(scuolaId);
 });
 
-document.getElementById('btn-add-school').addEventListener('click', async () => {
-    const nome = prompt("Nome della scuola:");
-    if(!nome) return;
-    const indirizzo = prompt("Indirizzo:");
-    const codMecc = prompt("Codice Meccanografico:");
-    const studenti = parseInt(prompt("Numero Studenti:"));
-    
-    if(nome && indirizzo && studenti) {
+async function addSchoolForm(e) {
+    e.preventDefault();
+    const nome = document.getElementById('new-school-name').value;
+    const indirizzo = document.getElementById('new-school-address').value;
+    const studenti = parseInt(document.getElementById('new-school-students').value);
+    const codice = document.getElementById('new-school-code').value;
+
+    try {
         await fetch('/api/scuole', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({nome, indirizzo, numero_studenti: studenti, codice_meccanografico: codMecc || ""})
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                nome: nome,
+                indirizzo: indirizzo,
+                numero_studenti: studenti,
+                codice_meccanografico: codice
+            })
+        });
+        document.getElementById('add-school-form').reset();
+        loadSchools();
+    } catch(err) { console.error(err); }
+}
+
+async function deleteSchool(id) {
+    if(confirm('Eliminare questa scuola e tutti i suoi sensori?')) {
+        await fetch(`/api/scuole/${id}`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         loadSchools();
     }
-});
+}
 
 async function editSchool(id, currentNome, currentIndirizzo, currentStudenti, currentCodMecc) {
     const nome = prompt("Nome della scuola:", currentNome);
@@ -668,7 +744,10 @@ async function addSensor(scuola_id, nomeScuola) {
     try {
         await fetch('/api/sensori', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({
                 scuola_id: scuola_id,
                 nome: nomeSensore,

@@ -11,6 +11,10 @@ from . import models, schemas
 from .database import SessionLocal, engine
 from .mqtt_client import start_mqtt
 from datetime import datetime, timedelta
+import jwt
+from pydantic import BaseModel
+from fastapi.security import OAuth2PasswordBearer
+from .auth import verify_password, get_password_hash, create_access_token, SECRET_KEY, ALGORITHM
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -20,6 +24,15 @@ app = FastAPI(title="IoT Water Monitoring")
 @app.on_event("startup")
 async def startup_event():
     start_mqtt()
+    db = SessionLocal()
+    try:
+        if not db.query(models.User).filter(models.User.username == "amministratore").first():
+            db.add(models.User(username="amministratore", password_hash=get_password_hash("amministratore"), role="amministratore"))
+        if not db.query(models.User).filter(models.User.username == "guest").first():
+            db.add(models.User(username="guest", password_hash=get_password_hash("guest"), role="guest"))
+        db.commit()
+    finally:
+        db.close()
 
 # Dependency
 def get_db():
@@ -29,6 +42,66 @@ def get_db():
     finally:
         db.close()
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+        
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+def require_admin(current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "amministratore":
+        raise HTTPException(status_code=403, detail="Non hai i permessi necessari")
+    return current_user
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/login")
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username == request.username).first()
+    if not user or not verify_password(request.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Username o password errati")
+    
+    access_token = create_access_token(data={"sub": user.username, "role": user.role})
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role, "username": user.username}
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "guest"
+
+@app.post("/api/users")
+def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username già in uso")
+    
+    new_user = models.User(
+        username=user.username,
+        password_hash=get_password_hash(user.password),
+        role=user.role
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "Utente creato con successo", "username": new_user.username, "role": new_user.role}
+
 # API Scuole
 @app.get("/api/scuole", response_model=List[schemas.Scuola])
 def read_scuole(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -36,7 +109,7 @@ def read_scuole(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return scuole
 
 @app.post("/api/scuole", response_model=schemas.Scuola)
-def create_scuola(scuola: schemas.ScuolaCreate, db: Session = Depends(get_db)):
+def create_scuola(scuola: schemas.ScuolaCreate, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
     db_scuola = models.Scuola(**scuola.dict())
     db.add(db_scuola)
     db.commit()
@@ -44,7 +117,7 @@ def create_scuola(scuola: schemas.ScuolaCreate, db: Session = Depends(get_db)):
     return db_scuola
 
 @app.delete("/api/scuole/{scuola_id}")
-def delete_scuola(scuola_id: int, db: Session = Depends(get_db)):
+def delete_scuola(scuola_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
     scuola = db.query(models.Scuola).filter(models.Scuola.id == scuola_id).first()
     if not scuola:
         raise HTTPException(status_code=404, detail="Scuola not found")
@@ -53,7 +126,7 @@ def delete_scuola(scuola_id: int, db: Session = Depends(get_db)):
     return {"ok": True}
 
 @app.put("/api/scuole/{scuola_id}", response_model=schemas.Scuola)
-def update_scuola(scuola_id: int, scuola_update: schemas.ScuolaCreate, db: Session = Depends(get_db)):
+def update_scuola(scuola_id: int, scuola_update: schemas.ScuolaCreate, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
     scuola = db.query(models.Scuola).filter(models.Scuola.id == scuola_id).first()
     if not scuola:
         raise HTTPException(status_code=404, detail="Scuola not found")
@@ -91,7 +164,7 @@ def read_stato_sensori(scuola_id: int, db: Session = Depends(get_db)):
     return stato
 
 @app.post("/api/sensori", response_model=schemas.Sensore)
-def create_sensore(sensore: schemas.SensoreCreate, db: Session = Depends(get_db)):
+def create_sensore(sensore: schemas.SensoreCreate, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
     db_sensore = models.Sensore(
         scuola_id=sensore.scuola_id,
         tipo=sensore.tipo,
@@ -105,6 +178,15 @@ def create_sensore(sensore: schemas.SensoreCreate, db: Session = Depends(get_db)
     
     # Riavvia il simulatore se è attivo (opzionale, o basta attendere)
     return db_sensore
+
+@app.delete("/api/sensori/{sensore_id}")
+def delete_sensore(sensore_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
+    sensore = db.query(models.Sensore).filter(models.Sensore.id == sensore_id).first()
+    if not sensore:
+        raise HTTPException(status_code=404, detail="Sensore non trovato")
+    db.delete(sensore)
+    db.commit()
+    return {"ok": True}
 
 # API Letture e Sensori
 @app.get("/api/letture", response_model=List[schemas.LetturaConScuola])

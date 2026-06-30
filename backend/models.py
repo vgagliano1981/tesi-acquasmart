@@ -50,3 +50,11 @@ class DatoReale(Base):
     data_inizio = Column(DateTime)
     data_fine = Column(DateTime)
     consumo = Column(Float, default=0.0) # Consumo in Litri o m3 nel periodo
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password_hash = Column(String)
+    role = Column(String, default="guest") # "amministratore" o "guest"

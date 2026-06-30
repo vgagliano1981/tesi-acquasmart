@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dashboard Consumi Acqua</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --accent: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .login-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .login-box {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+        }
+        .title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #2563eb;
+        }
+        #error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .thesis-info {
+            background: rgba(0,0,0,0.3);
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .thesis-content {
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .thesis-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .thesis-details {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .detail-item strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+        .copyright {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.3);
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-box">
+            <!-- Sostituire assets/logo_catania.png con il file reale -->
+            <img src="assets/logo_catania.png" alt="Logo" class="logo" onerror="this.src='https://upload.wikimedia.org/wikipedia/it/thumb/a/a2/Citt%C3%A0_metropolitana_di_Catania-Stemma.svg/150px-Citt%C3%A0_metropolitana_di_Catania-Stemma.svg.png'">
+            <div class="title">Città Metropolitana di Catania</div>
+            <div class="subtitle">Dashboard Consumi Acqua</div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" required placeholder="Inserisci username">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Inserisci password">
+                </div>
+                <button type="submit" class="login-btn">Accedi</button>
+                <div id="error-msg">Username o password errati.</div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="thesis-info">
+        <div class="thesis-content">
+            <div class="thesis-title">Progetto di Tesi</div>
+            <div>Progettazione e sviluppo di una piattaforma IoT per il monitoraggio e l'analisi dei consumi energetici negli edifici pubblici</div>
+            
+            <div class="thesis-details">
+                <div class="detail-item">
+                    <strong>Materia</strong>
+                    Tesi in Internet of Things
+                </div>
+                <div class="detail-item">
+                    <strong>Relatore</strong>
+                    Prof. Kuznetsov
+                </div>
+                <div class="detail-item">
+                    <strong>Esecutore</strong>
+                    Gagliano Vito
+                </div>
+                <div class="detail-item">
+                    <strong>Sessione</strong>
+                    Novembre 2026
+                </div>
+            </div>
+            
+            <div class="copyright">
+                Piattaforma software progettata e sviluppata per tesi sperimentale da Gagliano Vito &copy; 2026. Tutti i diritti riservati.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('username', data.username);
+                    window.location.href = '/';
+                } else {
+                    document.getElementById('error-msg').style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-msg').style.display = 'block';
+                document.getElementById('error-msg').innerText = "Errore di connessione al server.";
+            }
+        });
+    </script>
+</body>
+</html>
