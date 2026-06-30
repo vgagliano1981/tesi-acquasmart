@@ -3,7 +3,7 @@ const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
 
 if (!token) {
-    window.location.href = 'login.html';
+    window.location.href = '/static/login.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.clear();
-            window.location.href = 'login.html';
+            window.location.href = '/static/login.html';
         });
     }
 
