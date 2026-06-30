@@ -58,6 +58,18 @@ def run_simulator(port):
     import iot_simulator.simulator
     iot_simulator.simulator.start_simulation()
 
+def keep_awake():
+    import urllib.request
+    import time
+    url = "https://tesi-acquasmart.onrender.com/"
+    while True:
+        time.sleep(600) # Attendi 10 minuti
+        try:
+            req = urllib.request.urlopen(url)
+            print(f"Keep-awake ping a {url}: Status {req.getcode()}")
+        except Exception as e:
+            print(f"Keep-awake ping fallito: {e}")
+
 if __name__ == "__main__":
     populate_if_empty()
     
@@ -66,6 +78,10 @@ if __name__ == "__main__":
     # Avvia il simulatore in un thread separato in background
     sim_thread = threading.Thread(target=run_simulator, args=(port,), daemon=True)
     sim_thread.start()
+    
+    # Avvia il keep-awake per impedire la sospensione su Render
+    awake_thread = threading.Thread(target=keep_awake, daemon=True)
+    awake_thread.start()
     
     # Avvia il server web FastAPI
     print(f"Avvio server Web sulla porta {port}...")
