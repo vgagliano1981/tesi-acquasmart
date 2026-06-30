@@ -509,3 +509,7 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 @app.get("/")
 def read_root():
     return FileResponse("frontend/index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+@app.get("/login.html")
+def read_login():
+    return FileResponse("frontend/login.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
