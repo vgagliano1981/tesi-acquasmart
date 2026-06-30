@@ -206,12 +206,19 @@ async function fetchLetture() {
             }
         });
 
-        liveChart.data.labels = ['Snapshot Consumi (L/min)'];
+        const isCubicMeters = document.getElementById('chart-unit-toggle')?.checked;
+        const unitLabel = isCubicMeters ? 'm³/min' : 'L/min';
+        
+        liveChart.data.labels = [`Snapshot Consumi (${unitLabel})`];
         liveChart.data.datasets = [];
         
+        liveChart.options.plugins.tooltip.callbacks.label = function(context) {
+            return `${context.dataset.label} | Consumo: ${context.parsed.y} ${unitLabel}`;
+        };
+        
         const colorPalette = [
-            '#FF3333', '#33FF33', '#3333FF', '#FFFF33', '#FF33FF', 
-            '#33FFFF', '#FF9933', '#9933FF', '#A0522D', '#FF1493'
+            '#FF4444', '#44FF44', '#4444FF', '#FFFF44', '#FF44FF', 
+            '#44FFFF', '#FF9944', '#9944FF', '#FF5500', '#FF1493'
         ];
 
         let colorIndex = 0;
@@ -228,12 +235,14 @@ async function fetchLetture() {
             let datasetLabel = scuolaId ? d.sensore_nome : d.scuola_nome;
             let bgColor = d.is_anomalia ? '#ef4444' : schoolColorMap[d.scuola_nome];
             
+            const valueToPlot = isCubicMeters ? (d.valore_litri / 1000) : d.valore_litri;
+            
             liveChart.data.datasets.push({
                 label: datasetLabel,
-                data: [d.valore_litri],
-                backgroundColor: bgColor + '99',
-                borderColor: bgColor,
-                borderWidth: 2,
+                data: [valueToPlot],
+                backgroundColor: bgColor,
+                borderColor: '#ffffff',
+                borderWidth: 1,
                 pointStyle: d.sensore_is_main ? 'rectRot' : 'circle'
             });
         });
