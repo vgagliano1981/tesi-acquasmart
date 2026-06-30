@@ -252,6 +252,12 @@
                 <div class="glass-panel" id="storico-bollette-container" style="margin-top: 2rem;">
                     <h3>Registro Storico Bollette</h3>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Elenco cronologico dei confronti salvati tra consumi reali (bollette) e letture dei sensori simulati, per avere un quadro chiaro delle anomalie.</p>
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+                        <label for="storico-scuola-filter" style="color: var(--text-secondary);">Filtra per Scuola:</label>
+                        <select id="storico-scuola-filter" class="glass-panel" style="padding: 0.5rem; border-radius: 8px; color: var(--text-primary); outline: none; border: 1px solid var(--accent); background: rgba(30,41,59,0.8); cursor: pointer; flex: 1; max-width: 300px;">
+                            <option value="">Tutte le scuole</option>
+                        </select>
+                    </div>
                     <div style="overflow-x: auto; margin-top: 1rem;">
                         <table style="width: 100%; border-collapse: collapse; text-align: left;">
                             <thead>
@@ -268,6 +274,11 @@
                                 <!-- Righe popolate dinamicamente -->
                             </tbody>
                         </table>
+                    </div>
+                    <div id="storico-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                        <button id="storico-prev-btn" class="btn" style="background: var(--panel-bg); color: var(--text-primary); border: 1px solid var(--panel-border); padding: 0.5rem 1rem; cursor: pointer;">Precedente</button>
+                        <span id="storico-page-info" style="color: var(--text-secondary); font-size: 0.9rem;">Pagina 1</span>
+                        <button id="storico-next-btn" class="btn" style="background: var(--panel-bg); color: var(--text-primary); border: 1px solid var(--panel-border); padding: 0.5rem 1rem; cursor: pointer;">Successiva</button>
                     </div>
                 </div>
             </section>

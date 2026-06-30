@@ -527,6 +527,20 @@ async function loadSchools() {
             dashboardSelector.value = currentValue;
         }
 
+        // Update storico selector
+        const storicoSelector = document.getElementById('storico-scuola-filter');
+        if(storicoSelector) {
+            const currentValue = storicoSelector.value;
+            storicoSelector.innerHTML = '<option value="">Tutte le scuole</option>';
+            scuole.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.nome;
+                storicoSelector.appendChild(opt);
+            });
+            storicoSelector.value = currentValue;
+        }
+
         // Update manual entry selector
         const manualSelector = document.getElementById('manual-scuola-select');
         if(manualSelector) {
@@ -1029,6 +1043,103 @@ if (btnPdf && inputPdf) {
         }
     };
 }
+
+// Logica Storico (Elenco Lista)
+let storicoDataAll = [];
+let currentStoricoPage = 1;
+const storicoPageSize = 5;
+
+async function loadStoricoBollette() {
+    const tableBody = document.getElementById('storico-table-body');
+    if (!tableBody) return;
+    
+    const scuolaSelect = document.getElementById('storico-scuola-filter');
+    const scuolaId = scuolaSelect ? scuolaSelect.value : "";
+    
+    try {
+        let url = '/api/storico_confronti';
+        url += `?t=${new Date().getTime()}`;
+        if (scuolaId) {
+            url += `&scuola_id=${scuolaId}`;
+        }
+        const res = await fetch(url);
+        storicoDataAll = await res.json();
+        
+        currentStoricoPage = 1;
+        renderStoricoTable();
+    } catch(e) {
+        console.error("Errore caricamento storico", e);
+    }
+}
+
+function renderStoricoTable() {
+    const tableBody = document.getElementById('storico-table-body');
+    if (!tableBody) return;
+    const tariffa = parseFloat(document.getElementById('manual-tariffa')?.value) || 2.50;
+    
+    const totalPages = Math.ceil(storicoDataAll.length / storicoPageSize) || 1;
+    if (currentStoricoPage > totalPages) currentStoricoPage = totalPages;
+    if (currentStoricoPage < 1) currentStoricoPage = 1;
+    
+    const startIndex = (currentStoricoPage - 1) * storicoPageSize;
+    const pagedData = storicoDataAll.slice(startIndex, startIndex + storicoPageSize);
+    
+    tableBody.innerHTML = '';
+    
+    pagedData.forEach(d => {
+        const bollettaMc = d.consumo_bolletta_litri / 1000;
+        const simulatoMc = d.consumo_simulato_litri / 1000;
+        const diffLitri = Math.abs(d.consumo_bolletta_litri - d.consumo_simulato_litri);
+        const diffMc = diffLitri / 1000;
+        const danno = (diffLitri / 1000) * tariffa;
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.innerHTML = `
+            <td style="padding: 1rem 0.5rem;">${d.periodo}</td>
+            <td style="padding: 1rem 0.5rem;"><strong>${d.nome_scuola}</strong></td>
+            <td style="padding: 1rem 0.5rem; color: #60a5fa;">${bollettaMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_bolletta_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+            <td style="padding: 1rem 0.5rem; color: #34d399;">${simulatoMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_simulato_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+            <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${diffLitri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+            <td style="padding: 1rem 0.5rem; color: var(--danger); font-weight: bold;">${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
+        `;
+        tableBody.appendChild(tr);
+    });
+
+    const pageInfo = document.getElementById('storico-page-info');
+    if (pageInfo) pageInfo.innerText = `Pagina ${currentStoricoPage} di ${totalPages}`;
+    
+    const prevBtn = document.getElementById('storico-prev-btn');
+    if (prevBtn) prevBtn.disabled = currentStoricoPage === 1;
+    
+    const nextBtn = document.getElementById('storico-next-btn');
+    if (nextBtn) nextBtn.disabled = currentStoricoPage === totalPages;
+}
+
+document.getElementById('storico-prev-btn')?.addEventListener('click', () => {
+    if (currentStoricoPage > 1) {
+        currentStoricoPage--;
+        renderStoricoTable();
+    }
+});
+
+document.getElementById('storico-next-btn')?.addEventListener('click', () => {
+    const totalPages = Math.ceil(storicoDataAll.length / storicoPageSize) || 1;
+    if (currentStoricoPage < totalPages) {
+        currentStoricoPage++;
+        renderStoricoTable();
+    }
+});
+
+// Carichiamo lo storico quando si apre la tab Dati Reali o si cambia la scuola
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.getAttribute('data-view') === 'dati-reali') {
+            loadStoricoBollette();
+        }
+    });
+});
+document.getElementById('storico-scuola-filter')?.addEventListener('change', loadStoricoBollette);
 
 // Logica Grafico Storico (Tabella + Trend)
 let trendChart = null;
