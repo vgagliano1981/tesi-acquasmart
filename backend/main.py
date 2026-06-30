@@ -513,3 +513,7 @@ def read_root():
 @app.get("/login.html")
 def read_login():
     return FileResponse("frontend/login.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+@app.get("/logo_catania.png")
+def read_logo():
+    return FileResponse("frontend/logo_catania.png", headers={"Cache-Control": "public, max-age=86400"})
