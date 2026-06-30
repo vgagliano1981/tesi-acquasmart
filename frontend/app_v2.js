@@ -358,9 +358,16 @@ async function fetchSensori(scuolaId) {
                     else if (isConducibilita) alarmText = '<div style="color: #ef4444; font-weight: bold; margin-top: 5px;">ERRORE: CONDUCIBILITÀ FUORI DAI LIMITI!</div>';
                 }
 
+                let valueHtml = `${s.valore_attuale.toFixed(2)} <span style="font-size: 0.5em; opacity: 0.8;">${unit}</span>`;
+                if (s.tipo === 'Acqua') {
+                    const valL = s.valore_attuale;
+                    const valMc = valL / 1000;
+                    valueHtml = `${valMc.toLocaleString('it-IT', {minimumFractionDigits:3, maximumFractionDigits:3})} <span style="font-size: 0.5em; opacity: 0.8;">m³</span><br><span style="font-size: 0.5em; color: #9ca3af;">${valL.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} L</span>`;
+                }
+
                 card.innerHTML = `
                     <h3>${icon} ${s.nome} <span style="font-size: 0.8em; opacity: 0.7;">(${s.tipo})</span></h3>
-                    <div class="value">${s.valore_attuale.toFixed(2)} <span style="font-size: 0.5em; opacity: 0.8;">${unit}</span></div>
+                    <div class="value">${valueHtml}</div>
                     <div style="font-size: 0.75rem; margin-top: 8px; text-align: center; opacity: 0.9;">${subtitle}</div>
                     ${alarmText}
                 `;
