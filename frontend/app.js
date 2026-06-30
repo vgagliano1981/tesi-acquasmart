@@ -1051,6 +1051,7 @@ async function loadStoricoBollette() {
             const bollettaMc = d.consumo_bolletta_litri / 1000;
             const simulatoMc = d.consumo_simulato_litri / 1000;
             const diffLitri = Math.abs(d.consumo_bolletta_litri - d.consumo_simulato_litri);
+            const diffMc = diffLitri / 1000;
             const danno = (diffLitri / 1000) * tariffa;
             
             labels.push(d.periodo);
@@ -1061,9 +1062,9 @@ async function loadStoricoBollette() {
             tr.innerHTML = `
                 <td style="padding: 1rem 0.5rem;">${d.periodo}</td>
                 <td style="padding: 1rem 0.5rem;"><strong>${d.nome_scuola}</strong></td>
-                <td style="padding: 1rem 0.5rem; color: #60a5fa;">${bollettaMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³</td>
-                <td style="padding: 1rem 0.5rem; color: #34d399;">${simulatoMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³</td>
-                <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffLitri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</td>
+                <td style="padding: 1rem 0.5rem; color: #60a5fa;">${bollettaMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_bolletta_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+                <td style="padding: 1rem 0.5rem; color: #34d399;">${simulatoMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_simulato_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+                <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${diffLitri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
                 <td style="padding: 1rem 0.5rem; color: var(--danger); font-weight: bold;">${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
             `;
             tableBody.appendChild(tr);

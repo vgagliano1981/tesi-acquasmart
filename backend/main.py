@@ -281,40 +281,7 @@ def read_allarmi(limit: int = 50, db: Session = Depends(get_db)):
         })
     return out
 
-@app.get("/api/confronto_consumi")
-def confronto_consumi(scuola_id: int, start_date: str, end_date: str, db: Session = Depends(get_db)):
-    try:
-        from dateutil.parser import parse
-        t_start = parse(start_date)
-        t_end = parse(end_date)
-    except:
-        raise HTTPException(status_code=400, detail="Invalid date format")
 
-    # Troviamo il sensore principale della scuola
-    sensore_main = db.query(models.Sensore).filter(
-        models.Sensore.scuola_id == scuola_id,
-        models.Sensore.is_main == True
-    ).first()
-
-    if not sensore_main:
-        return {"consumo_simulato_litri": 0.0}
-
-    # Otteniamo la prima e l'ultima lettura nel range di tempo
-    prima_lettura = db.query(models.Lettura).filter(
-        models.Lettura.sensore_id == sensore_main.id,
-        models.Lettura.timestamp >= t_start
-    ).order_by(models.Lettura.timestamp.asc()).first()
-
-    ultima_lettura = db.query(models.Lettura).filter(
-        models.Lettura.sensore_id == sensore_main.id,
-        models.Lettura.timestamp <= t_end
-    ).order_by(models.Lettura.timestamp.desc()).first()
-
-    consumo_simulato = 0.0
-    if prima_lettura and ultima_lettura and ultima_lettura.valore_litri >= prima_lettura.valore_litri:
-        consumo_simulato = ultima_lettura.valore_litri - prima_lettura.valore_litri
-
-    return {"consumo_simulato_litri": consumo_simulato}
 
 # API per dati reali manuali
 @app.post("/api/dati_reali", response_model=schemas.DatoReale)
@@ -423,17 +390,11 @@ def storico_confronti(scuola_id: int = None, db: Session = Depends(get_db)):
                 models.Sensore.is_main == True
             ).first()
             if sensore_main:
-                prima_lettura = db.query(models.Lettura).filter(
+                consumo_simulato = db.query(func.sum(models.Lettura.valore_litri)).filter(
                     models.Lettura.sensore_id == sensore_main.id,
-                    models.Lettura.timestamp >= d.data_inizio
-                ).order_by(models.Lettura.timestamp.asc()).first()
-                ultima_lettura = db.query(models.Lettura).filter(
-                    models.Lettura.sensore_id == sensore_main.id,
+                    models.Lettura.timestamp >= d.data_inizio,
                     models.Lettura.timestamp <= d.data_fine
-                ).order_by(models.Lettura.timestamp.desc()).first()
-                
-                if prima_lettura and ultima_lettura and ultima_lettura.valore_litri >= prima_lettura.valore_litri:
-                    consumo_simulato = ultima_lettura.valore_litri - prima_lettura.valore_litri
+                ).scalar() or 0.0
 
         risultati.append({
             "id": d.id,
