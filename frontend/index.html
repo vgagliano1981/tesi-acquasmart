@@ -345,27 +345,47 @@
                 <header class="view-header">
                     <h2>Gestione Utenti (Admin)</h2>
                 </header>
-                <div class="glass-panel" style="max-width: 500px;">
-                    <h3>Crea Nuovo Utente</h3>
-                    <form id="create-user-form" style="margin-top: 1.5rem;">
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Username</label>
-                            <input type="text" id="new-username" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <div class="glass-panel" style="flex: 1; min-width: 300px; max-width: 400px; height: fit-content;">
+                        <h3>Crea Nuovo Utente</h3>
+                        <form id="create-user-form" style="margin-top: 1.5rem;">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Username</label>
+                                <input type="text" id="new-username" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
+                                <input type="password" id="new-password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+                            </div>
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Ruolo</label>
+                                <select id="new-role" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
+                                    <option value="guest">Guest (Sola lettura)</option>
+                                    <option value="amministratore">Amministratore (Accesso Completo)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn primary-btn" style="width: 100%;">Crea Utente</button>
+                            <div id="user-msg" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+                        </form>
+                    </div>
+                    
+                    <div class="glass-panel" style="flex: 2; min-width: 400px;">
+                        <h3>Utenti Registrati</h3>
+                        <div class="table-container" style="margin-top: 1.5rem;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Ruolo</th>
+                                        <th>Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-tbody">
+                                </tbody>
+                            </table>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
-                            <input type="password" id="new-password" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
-                        </div>
-                        <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Ruolo</label>
-                            <select id="new-role" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white;">
-                                <option value="guest">Guest (Sola lettura)</option>
-                                <option value="amministratore">Amministratore (Accesso Completo)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn primary-btn" style="width: 100%;">Crea Utente</button>
-                        <div id="user-msg" style="margin-top: 1rem; font-size: 0.9rem;"></div>
-                    </form>
+                    </div>
                 </div>
             </section>
 

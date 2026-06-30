@@ -102,6 +102,22 @@ def create_user(user: UserCreate, db: Session = Depends(get_db), current_user: m
     db.refresh(new_user)
     return {"message": "Utente creato con successo", "username": new_user.username, "role": new_user.role}
 
+@app.get("/api/users", response_model=List[schemas.UserResponse])
+def read_users(db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
+    users = db.query(models.User).all()
+    return users
+
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(require_admin)):
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Non puoi eliminare il tuo stesso account")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utente non trovato")
+    db.delete(user)
+    db.commit()
+    return {"ok": True}
+
 # API Scuole
 @app.get("/api/scuole", response_model=List[schemas.Scuola])
 def read_scuole(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

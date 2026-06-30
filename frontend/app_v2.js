@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     msgEl.style.color = '#10b981';
                     msgEl.innerText = data.message;
                     createUserForm.reset();
+                    loadUsers();
                 } else {
                     msgEl.style.color = '#ef4444';
                     msgEl.innerText = data.detail || 'Errore nella creazione.';
@@ -75,6 +76,7 @@ document.querySelectorAll('.nav-item').forEach(button => {
         document.getElementById(viewId).classList.add('active');
         
         if (viewId === 'anagrafe') loadSchools();
+        if (viewId === 'utenti') loadUsers();
         if (viewId === 'dashboard') {
             const dashboardSelector = document.getElementById('dashboard-school-selector');
             if (dashboardSelector && dashboardSelector.value !== "") {
@@ -738,7 +740,6 @@ async function addSensor(scuola_id, nomeScuola) {
     const nomeSensore = prompt(`Inserisci un nome per il nuovo punto di prelievo nella scuola ${nomeScuola} (es. Bagno Piano Primo):`);
     if(!nomeSensore) return;
     
-    // Genera un topic univoco fittizio
     const randomTopic = `tesi/catania/scuole/${scuola_id}/sub_${Math.floor(Math.random() * 10000)}`;
     
     try {
@@ -756,9 +757,56 @@ async function addSensor(scuola_id, nomeScuola) {
                 is_main: false
             })
         });
-        alert(`Sensore "${nomeSensore}" aggiunto con successo. Il simulatore inizierà a generare dati a breve.`);
+        alert(`Sensore "${nomeSensore}" aggiunto con successo.`);
     } catch(e) {
         alert("Errore nell'aggiunta del sensore.");
+    }
+}
+
+async function loadUsers() {
+    if (localStorage.getItem('role') !== 'amministratore') return;
+    try {
+        const res = await fetch('/api/users', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if(!res.ok) return;
+        const users = await res.json();
+        const tbody = document.getElementById('users-tbody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${u.id}</td>
+                <td>${u.username}</td>
+                <td><span style="padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(59,130,246,0.2); font-size:0.85rem;">${u.role}</span></td>
+                <td>
+                    <button class="btn" style="padding: 0.2rem 0.5rem; background: transparent; border: 1px solid var(--danger); color: var(--danger)" onclick="deleteUser(${u.id})">Elimina</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function deleteUser(id) {
+    if(confirm('Sei sicuro di voler eliminare questo utente?')) {
+        try {
+            const res = await fetch(`/api/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (res.ok) {
+                loadUsers();
+            } else {
+                const data = await res.json();
+                alert(data.detail || "Errore durante l'eliminazione");
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 }
 
