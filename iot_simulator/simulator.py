@@ -32,7 +32,8 @@ def get_scuole_sensori():
 def start_simulation():
     while True:
         try:
-            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "Simulator_Catania_Adv")
+            client_id = f"Simulator_Catania_Adv_{random.randint(100000, 999999)}"
+            client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id)
             print("Connessione al broker MQTT in corso...")
             client.connect(MQTT_BROKER, MQTT_PORT, 60)
             break
@@ -45,13 +46,12 @@ def start_simulation():
     print("Avvio simulazione invio dati per TUTTE le scuole (CTRL+C per fermare)")
     base_sub_consumption = 3.0 # litri al min per sotto-sensore
     
-    try:
-        while True:
+    while True:
+        try:
             scuole = get_scuole_sensori()
             if not scuole:
                 print("Nessun sensore trovato nel DB. Riprovo tra 5 secondi...")
                 time.sleep(5)
-                scuole = get_scuole_sensori()
                 continue
 
             for scuola_id, sensori in scuole.items():
@@ -128,9 +128,9 @@ def start_simulation():
             
             # Attende prima di un nuovo ciclo globale
             time.sleep(600)
-    except KeyboardInterrupt:
-        print("Simulazione interrotta.")
-        client.disconnect()
+        except Exception as e:
+            print(f"Errore nel ciclo di simulazione: {e}")
+            time.sleep(10)
 
 if __name__ == "__main__":
     start_simulation()

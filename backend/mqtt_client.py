@@ -21,8 +21,9 @@ def on_message(client, userdata, msg):
         
         # Save to DB
         db = SessionLocal()
-        # Trova il sensore o crealo
-        sensore = db.query(Sensore).filter(Sensore.topic_mqtt == topic).first()
+        try:
+            # Trova il sensore o crealo
+            sensore = db.query(Sensore).filter(Sensore.topic_mqtt == topic).first()
         if not sensore:
             # Per il prototipo, se il sensore non esiste lo creiamo associato alla scuola 1 (default)
             sensore = Sensore(scuola_id=1, tipo="Acqua", topic_mqtt=topic)
@@ -79,7 +80,8 @@ def on_message(client, userdata, msg):
             print("📧 INVIO EMAIL DI NOTIFICA SIMULATO A: vitogagliano@gmail.com")
             print("="*50 + "\n")
             
-        db.close()
+        finally:
+            db.close()
         
         print(f"Received {valore} on {topic} -> Anomaly: {is_anomalia}")
     except Exception as e:
