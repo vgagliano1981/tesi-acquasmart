@@ -30,6 +30,14 @@ def get_scuole_sensori():
         return {}
 
 def start_simulation():
+    try:
+        import ctypes
+        # ES_CONTINUOUS = 0x80000000, ES_SYSTEM_REQUIRED = 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001)
+        print("Sistema anti-sospensione attivato per il simulatore.")
+    except Exception as e:
+        print(f"Impossibile attivare l'anti-sospensione: {e}")
+
     while True:
         try:
             client_id = f"Simulator_Catania_Adv_{random.randint(100000, 999999)}"

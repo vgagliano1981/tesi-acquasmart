@@ -86,11 +86,17 @@ def keep_awake():
     import urllib.request
     import time
     url = "https://tesi-acquasmart.onrender.com/"
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, come Gecko) Chrome/114.0.0.0 Safari/537.36'
+    }
+    
     while True:
-        time.sleep(600) # Attendi 10 minuti
+        time.sleep(300) # Attendi 5 minuti
         try:
-            req = urllib.request.urlopen(url)
-            print(f"Keep-awake ping a {url}: Status {req.getcode()}")
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req) as response:
+                print(f"Keep-awake ping a {url}: Status {response.getcode()}")
         except Exception as e:
             print(f"Keep-awake ping fallito: {e}")
 

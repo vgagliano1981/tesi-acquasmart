@@ -23,6 +23,14 @@ app = FastAPI(title="IoT Water Monitoring")
 # Start MQTT Background Task
 @app.on_event("startup")
 async def startup_event():
+    try:
+        import ctypes
+        # ES_CONTINUOUS = 0x80000000, ES_SYSTEM_REQUIRED = 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001)
+        print("Sistema anti-sospensione attivato per il backend.")
+    except Exception as e:
+        pass
+    
     start_mqtt()
     db = SessionLocal()
     try:

@@ -87,22 +87,35 @@ document.querySelectorAll('.nav-item').forEach(button => {
     });
 });
 
-// Inactivity Timer for Dashboard Reset (5 minutes)
-let inactivityTimer;
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
+// Inactivity Timers
+let dashboardResetTimer;
+let logoutTimer;
+
+function resetInactivityTimers() {
+    clearTimeout(dashboardResetTimer);
+    clearTimeout(logoutTimer);
+
+    // Dashboard Reset (5 minutes)
+    dashboardResetTimer = setTimeout(() => {
         const dashboardSelector = document.getElementById('dashboard-school-selector');
         if (dashboardSelector && dashboardSelector.value !== "") {
             dashboardSelector.value = "";
             dashboardSelector.dispatchEvent(new Event('change'));
         }
     }, 5 * 60 * 1000);
+
+    // Auto-Logout (30 minutes)
+    logoutTimer = setTimeout(() => {
+        alert("Sessione scaduta per inattività (30 minuti). Verrai reindirizzato al login.");
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }, 30 * 60 * 1000);
 }
+
 ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-    document.addEventListener(evt, resetInactivityTimer);
+    document.addEventListener(evt, resetInactivityTimers);
 });
-resetInactivityTimer();
+resetInactivityTimers();
 
 // Chart.js Setup
 const ctx = document.getElementById('liveChart').getContext('2d');
