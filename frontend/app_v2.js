@@ -1092,7 +1092,28 @@ if (btnConfrontaManuale) {
             // Danno Economico
             const tariffa = parseFloat(document.getElementById('manual-tariffa').value) || 2.50;
             const dannoEuro = differenzaMC * tariffa;
-            document.getElementById('res-danno-euro').textContent = `${dannoEuro.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+            
+            const labelDanno = document.getElementById('label-danno-euro');
+            const cardDanno = document.getElementById('card-danno-euro');
+            const resDanno = document.getElementById('res-danno-euro');
+            
+            resDanno.textContent = `${dannoEuro.toLocaleString('it-IT', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+
+            if (consumoRealeLitri > consumoSimulatoLitri) {
+                // Pagato più del dovuto -> Danno per l'Ente (Città Metropolitana)
+                labelDanno.textContent = "Danno Econ. (Ente)";
+                cardDanno.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                resDanno.style.color = "#ef4444";
+            } else if (consumoSimulatoLitri > consumoRealeLitri) {
+                // Consumato più del pagato -> Ammanco per il Gestore (Società Acqua)
+                labelDanno.textContent = "Ammanco (Gestore)";
+                cardDanno.style.borderColor = "rgba(245, 158, 11, 0.3)";
+                resDanno.style.color = "#f59e0b";
+            } else {
+                labelDanno.textContent = "Nessun Danno";
+                cardDanno.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                resDanno.style.color = "#9ca3af";
+            }
             
             // Salva nello storico
             const btnSalva = document.getElementById('btn-salva-storico');
@@ -1270,9 +1291,19 @@ function renderStoricoTable() {
     pagedData.forEach(d => {
         const bollettaMc = d.consumo_bolletta_litri / 1000;
         const simulatoMc = d.consumo_simulato_litri / 1000;
-        const diffLitri = Math.abs(d.consumo_bolletta_litri - d.consumo_simulato_litri);
-        const diffMc = diffLitri / 1000;
-        const danno = (diffLitri / 1000) * tariffa;
+        const diffLitriRaw = d.consumo_bolletta_litri - d.consumo_simulato_litri;
+        const diffLitriAbs = Math.abs(diffLitriRaw);
+        const diffMc = diffLitriAbs / 1000;
+        const danno = (diffLitriAbs / 1000) * tariffa;
+        
+        let statoDannoHtml = '';
+        if (diffLitriRaw > 0) {
+            statoDannoHtml = `<span style="color: var(--danger); font-weight: bold;">-${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €<br><span style="font-size:0.75rem; color:#ef4444;">(Danno Ente)</span></span>`;
+        } else if (diffLitriRaw < 0) {
+            statoDannoHtml = `<span style="color: #f59e0b; font-weight: bold;">+${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €<br><span style="font-size:0.75rem; color:#f59e0b;">(Ammanco Gestore)</span></span>`;
+        } else {
+            statoDannoHtml = `<span style="color: #9ca3af; font-weight: bold;">0,00 €</span>`;
+        }
         
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
@@ -1281,8 +1312,8 @@ function renderStoricoTable() {
             <td style="padding: 1rem 0.5rem;"><strong>${d.nome_scuola}</strong></td>
             <td style="padding: 1rem 0.5rem; color: #60a5fa;">${bollettaMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_bolletta_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
             <td style="padding: 1rem 0.5rem; color: #34d399;">${simulatoMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${d.consumo_simulato_litri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
-            <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${diffLitri.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
-            <td style="padding: 1rem 0.5rem; color: var(--danger); font-weight: bold;">${danno.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} €</td>
+            <td style="padding: 1rem 0.5rem; color: var(--warning);">${diffMc.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2})} m³<br><span style="font-size: 0.85rem; color: #9ca3af;">${diffLitriAbs.toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:0})} L</span></td>
+            <td style="padding: 1rem 0.5rem;">${statoDannoHtml}</td>
         `;
         tableBody.appendChild(tr);
     });
