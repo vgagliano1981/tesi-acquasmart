@@ -127,7 +127,7 @@ def start_simulation():
                     client.publish(c_sensor["topic"], json.dumps(payload))
             
             # Attende prima di un nuovo ciclo globale
-            time.sleep(60)
+            time.sleep(600)
         except Exception as e:
             print(f"Errore nel ciclo di simulazione: {e}")
             time.sleep(10)
