@@ -14,6 +14,30 @@ def populate_if_empty():
     try:
         conn = sqlite3.connect('iot_platform.db')
         cursor = conn.cursor()
+        
+        # Crea le tabelle in SQLite se non esistono (necessario per il simulatore in cloud)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS scuole (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                indirizzo TEXT,
+                numero_studenti INTEGER,
+                codice_meccanografico TEXT
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sensori (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scuola_id INTEGER,
+                tipo TEXT,
+                topic_mqtt TEXT,
+                nome TEXT,
+                is_main INTEGER,
+                FOREIGN KEY (scuola_id) REFERENCES scuole (id)
+            )
+        ''')
+        conn.commit()
+        
         cursor.execute("SELECT COUNT(*) FROM scuole")
         if cursor.fetchone()[0] == 0:
             print("Database vuoto, avvio script di popolamento automatico...")
