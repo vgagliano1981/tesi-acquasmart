@@ -7,6 +7,7 @@ class AnomalyDetector:
         self.model = IsolationForest(contamination=contamination, random_state=42)
         self.is_fitted = False
         self.history = []
+        self.last_train_size = 0
 
     def _extract_features(self, value, timestamp):
         if timestamp is None:
@@ -27,12 +28,25 @@ class AnomalyDetector:
         features = self._extract_features(value, timestamp)
         self.history.append(features)
         
-        # Retrain every 100 new values if history gets large, or just keep history simple
+        # Limit history to prevent excessive memory and training time
+        if len(self.history) > 10000:
+            self.history = self.history[-10000:]
+            self.last_train_size = min(self.last_train_size, 10000)
+            
+        current_size = len(self.history)
+        
+        # Initial fit or periodic retrain
         if not self.is_fitted:
-            if len(self.history) > 10:
+            if current_size > 10:
                 self.fit(self.history)
+                self.last_train_size = current_size
             else:
                 return False, 0.0 # Not enough data to predict
+        else:
+            # Retrain every 100 new values
+            if current_size - self.last_train_size >= 100:
+                self.fit(self.history)
+                self.last_train_size = current_size
 
         # Predict anomaly
         X = np.array([features])

@@ -369,7 +369,8 @@ def read_allarmi(limit: int = 50, db: Session = Depends(get_db)):
         models.Sensore.is_main.label("is_main")
     ).join(models.Sensore, models.Lettura.sensore_id == models.Sensore.id)\
      .join(models.Scuola, models.Sensore.scuola_id == models.Scuola.id)\
-     .filter(models.Lettura.is_anomalia == True)
+     .filter(models.Lettura.is_anomalia == True)\
+     .filter(models.Sensore.tipo == "Acqua")
     
     results = query.order_by(models.Lettura.timestamp.desc()).limit(limit).all()
     
