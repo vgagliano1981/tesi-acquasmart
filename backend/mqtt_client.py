@@ -18,6 +18,8 @@ def on_message(client, userdata, msg):
         payload = json.loads(msg.payload.decode())
         topic = msg.topic
         valore = payload.get("valore", 0.0)
+        is_gt_anomaly = payload.get("is_ground_truth_anomaly", False)
+        gt_type = payload.get("ground_truth_type", None)
         
         # Save to DB
         db = SessionLocal()
@@ -54,7 +56,9 @@ def on_message(client, userdata, msg):
                 timestamp=now,
                 valore_litri=valore,
                 is_anomalia=is_anomalia,
-                anomaly_score=score
+                anomaly_score=score,
+                is_ground_truth_anomaly=is_gt_anomaly,
+                ground_truth_type=gt_type
             )
             db.add(lettura)
             db.commit()

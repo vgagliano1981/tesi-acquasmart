@@ -37,6 +37,8 @@ class LetturaBase(BaseModel):
     valore_litri: float
     is_anomalia: bool
     anomaly_score: float
+    is_ground_truth_anomaly: Optional[bool] = False
+    ground_truth_type: Optional[str] = None
 
 class LetturaCreate(LetturaBase):
     sensore_id: int

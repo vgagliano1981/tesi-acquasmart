@@ -36,6 +36,8 @@ class Lettura(Base):
     valore_litri = Column(Float)
     is_anomalia = Column(Boolean, default=False)
     anomaly_score = Column(Float, default=0.0)
+    is_ground_truth_anomaly = Column(Boolean, default=False)
+    ground_truth_type = Column(String, nullable=True)
     
     sensore = relationship("Sensore", back_populates="letture")
 

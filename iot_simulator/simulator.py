@@ -78,13 +78,22 @@ def start_simulation():
                     valore = base_sub_consumption + random.uniform(-1.0, 1.0)
                     
                     # Anomalia Locale (2% prob)
+                    is_anomaly = False
+                    anomaly_type = None
                     if random.random() < 0.02:
                         valore = base_sub_consumption * random.uniform(3.0, 5.0)
+                        is_anomaly = True
+                        anomaly_type = "Anomalia Locale (Perdita Minore)"
                         print(f"!!! ANOMALIA LOCALE ({sub['nome']}): {valore:.2f} L/min !!!")
                     
                     sum_subs += valore
                     
-                    payload = {"valore": round(valore, 2), "timestamp": time.time()}
+                    payload = {
+                        "valore": round(valore, 2), 
+                        "timestamp": time.time(),
+                        "is_ground_truth_anomaly": is_anomaly,
+                        "ground_truth_type": anomaly_type
+                    }
                     client.publish(sub["topic"], json.dumps(payload))
                 
                 # Generazione Contatore Principale
@@ -92,12 +101,21 @@ def start_simulation():
                     main_valore = sum_subs
                     
                     # Perdita Occulta nell'impianto generale (2% prob)
+                    is_anomaly = False
+                    anomaly_type = None
                     if random.random() < 0.02:
                         perdita = random.uniform(15.0, 30.0)
                         main_valore += perdita
+                        is_anomaly = True
+                        anomaly_type = "Perdita Occulta"
                         print(f"!!! PERDITA OCCULTA RILEVATA (Scuola {scuola_id}): Mismatch di {perdita:.2f} L/min !!!")
                     
-                    payload = {"valore": round(main_valore, 2), "timestamp": time.time()}
+                    payload = {
+                        "valore": round(main_valore, 2), 
+                        "timestamp": time.time(),
+                        "is_ground_truth_anomaly": is_anomaly,
+                        "ground_truth_type": anomaly_type
+                    }
                     client.publish(main_sensor["topic"], json.dumps(payload))
 
                 # Generazione sensori di Pressione
@@ -106,32 +124,60 @@ def start_simulation():
                     p_valore = random.uniform(2.0, 2.5)
                     
                     # Anomalia di pressione (2% prob)
+                    is_anomaly = False
+                    anomaly_type = None
                     if random.random() < 0.02:
+                        is_anomaly = True
                         if random.random() < 0.5:
                             p_valore = random.uniform(0.5, 1.4) # Difetto
+                            anomaly_type = "Calo di Pressione"
                         else:
                             p_valore = random.uniform(3.1, 4.5) # Esubero
+                            anomaly_type = "Sovrappressione"
                         print(f"!!! ANOMALIA PRESSIONE ({p_sensor['nome']}): {p_valore:.2f} bar !!!")
                         
-                    payload = {"valore": round(p_valore, 2), "timestamp": time.time()}
+                    payload = {
+                        "valore": round(p_valore, 2), 
+                        "timestamp": time.time(),
+                        "is_ground_truth_anomaly": is_anomaly,
+                        "ground_truth_type": anomaly_type
+                    }
                     client.publish(p_sensor["topic"], json.dumps(payload))
 
                 # Generazione sensori di Torbidità
                 for t_sensor in turbidity_sensors:
                     t_valore = random.uniform(0.1, 0.5)
+                    is_anomaly = False
+                    anomaly_type = None
                     if random.random() < 0.02:
                         t_valore = random.uniform(1.5, 5.0) # Anomalia > 1.0
+                        is_anomaly = True
+                        anomaly_type = "Elevata Torbidità"
                         print(f"!!! ANOMALIA TORBIDITA' ({t_sensor['nome']}): {t_valore:.2f} NTU !!!")
-                    payload = {"valore": round(t_valore, 2), "timestamp": time.time()}
+                    payload = {
+                        "valore": round(t_valore, 2), 
+                        "timestamp": time.time(),
+                        "is_ground_truth_anomaly": is_anomaly,
+                        "ground_truth_type": anomaly_type
+                    }
                     client.publish(t_sensor["topic"], json.dumps(payload))
 
                 # Generazione sensori di Conducibilità
                 for c_sensor in conductivity_sensors:
                     c_valore = random.uniform(300, 800)
+                    is_anomaly = False
+                    anomaly_type = None
                     if random.random() < 0.02:
                         c_valore = random.uniform(2600, 3000) # Anomalia > 2500
+                        is_anomaly = True
+                        anomaly_type = "Alta Conducibilità (Inquinanti)"
                         print(f"!!! ANOMALIA CONDUCIBILITA' ({c_sensor['nome']}): {c_valore:.2f} µS/cm !!!")
-                    payload = {"valore": round(c_valore, 2), "timestamp": time.time()}
+                    payload = {
+                        "valore": round(c_valore, 2), 
+                        "timestamp": time.time(),
+                        "is_ground_truth_anomaly": is_anomaly,
+                        "ground_truth_type": anomaly_type
+                    }
                     client.publish(c_sensor["topic"], json.dumps(payload))
             
             # Attende prima di un nuovo ciclo globale
