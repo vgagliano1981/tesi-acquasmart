@@ -1,9 +1,9 @@
 Metric,Value
-Total Samples Analyzed,340640.0
-True Positives (TP),7855.0
-True Negatives (TN),330996.0
-False Positives (FP),1158.0
-False Negatives (FN),631.0
-Precision,0.871518917119716
-Recall,0.9256422342682065
-F1-Score,0.8977655866049489
+Total Samples Analyzed,360640.0
+True Positives (TP),8112.0
+True Negatives (TN),345853.0
+False Positives (FP),5887.0
+False Negatives (FN),788.0
+Precision,0.5794699621401529
+Recall,0.9114606741573034
+F1-Score,0.7085025546967118

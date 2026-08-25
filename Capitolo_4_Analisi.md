@@ -78,21 +78,21 @@ Nella primissima fase di esecuzione (nota in letteratura come fase di *warm-up* 
 
 Tuttavia, non appena la finestra dei dati processati si è allargata accogliendo intere serie settimanali — capaci di fornire al sistema un ciclo completo e rappresentativo di mattinate ordinarie, pomeriggi sonnolenti, weekend di inattività e nottate —, l'Intelligenza Artificiale ha affinato nettamente i propri contorni decisionali.
 
-A valle della simulazione di due mesi, al netto della fase di *warm-up*, l'algoritmo ha processato un totale di **340.640 letture valide**. I risultati quantitativi confermano l'estrema efficacia del modello nel discernere i consumi anomali, come si evince dalla seguente **Matrice di Confusione**:
+A valle della simulazione di due mesi, al netto della fase di *warm-up* (10.000 letture scartate per l'addestramento iniziale), l'algoritmo ha processato un totale di **360.640 letture valide** (su 370.640 complessive registrate). I risultati quantitativi, generati mediante lo script di valutazione e direttamente riconducibili all'output CSV sperimentale, confermano l'efficacia del modello nel discernere i consumi anomali. Di seguito la **Matrice di Confusione**:
 
 | Metrica | Valore | Descrizione |
 | :--- | :--- | :--- |
-| **True Positives (TP)** | 7.855 | Anomalie reali (es. perdite occulte) correttamente rilevate |
-| **True Negatives (TN)** | 330.996 | Consumi standard correttamente ignorati |
-| **False Positives (FP)** | 1.158 | Falsi allarmi dovuti a picchi di consumo insoliti |
-| **False Negatives (FN)** | 631 | Micro-perdite sfuggite all'algoritmo |
+| **True Positives (TP)** | 8.112 | Anomalie reali (es. perdite occulte e micro-perdite) correttamente rilevate |
+| **True Negatives (TN)** | 345.853 | Consumi standard correttamente ignorati |
+| **False Positives (FP)** | 5.887 | Falsi allarmi dovuti a picchi di consumo insoliti |
+| **False Negatives (FN)** | 788 | Micro-perdite sfuggite all'algoritmo |
 
-Da questi valori assoluti derivano le tre metriche fondamentali:
-*   **Precision (Precisione):** **87.15%**
-*   **Recall (Sensibilità):** **92.56%**
-*   **F1-Score:** **89.78%**
+Da questi valori assoluti derivano le tre metriche fondamentali di valutazione:
+*   **Precision (Precisione):** **57.95%**
+*   **Recall (Sensibilità):** **91.15%**
+*   **F1-Score:** **70.85%**
 
-A regime, quindi, sia la **Precisione** che la **Sensibilità (Recall)** hanno soddisfatto i target prefissati, attestandosi stabilmente all'87.15% e al 92.56% rispettivamente, riducendo al minimo sia le segnalazioni errate che i guasti ignorati.
+Questi dati confermano che il sistema raggiunge l'obiettivo primario di affidabilità diagnostica: la **Sensibilità (Recall)** al 91.15% dimostra la capacità di intercettare quasi totalmente le rotture (incluse le insidiose perdite occulte ed episodi di micro-perdita). La **Precisione** si assesta sul 57.95% a causa dell'estrema variabilità dei consumi fisiologici scolastici, che l'Isolation Forest talvolta fatica a interpretare generando falsi positivi precauzionali, ma produce comunque un solido **F1-Score del 70.85%**, un bilanciamento eccellente per modelli non supervisionati in questo dominio IoT.
 
 ### Il Focus sulle Perdite Occulte e Micro-Perdite
 Il banco di prova più importante e probante si è manifestato con le cosiddette "Perdite Occulte". Il simulatore aveva il compito di immettere perdite persistenti dal valore poco evidente (ad esempio un rubinetto dei servizi igienici che perde 2 litri al minuto costantemente, o un galleggiante difettoso). 

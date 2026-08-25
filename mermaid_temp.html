@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({startOnLoad:true});</script>
+</head>
+<body>
+  <div id="diag1" class="mermaid">
+graph LR
+    subgraph Livello di Campo Edge
+    S1[Contatore Principale] -->|Letture Idriche| B(Broker MQTT)
+    S2[Sub-Sensore 1] -->|Letture Idriche| B
+    S3[Sensore Pressione] -->|Stabilità Impianto| B
+    end
+
+    subgraph Livello di Trasporto Middleware
+    B{Mosquitto Broker}
+    end
+
+    subgraph Livello Applicativo Backend
+    B -->|Subscribe Topic| F(FastAPI Backend)
+    F -->|Elaborazione e Inferenza| ML[Isolation Forest]
+    F -->|Persistenza| DB[(SQLite / PostgreSQL)]
+    end
+    
+    subgraph Frontend Client
+    DB --> F
+    F -->|REST API JSON| UI[Dashboard Web AcquaSmart]
+    end
+  </div>
+  
+  <div id="diag2" class="mermaid">
+erDiagram
+    SCUOLA {
+        int id PK
+        string nome
+        string indirizzo
+        string codice_meccanografico
+    }
+    SENSORE {
+        int id PK
+        int scuola_id FK
+        string topic_mqtt
+        string tipo
+        boolean is_main
+    }
+    LETTURA {
+        int id PK
+        int sensore_id FK
+        datetime timestamp
+        float valore_litri
+        boolean is_anomalia
+        float anomaly_score
+        boolean is_ground_truth_anomaly
+        string ground_truth_type
+    }
+    
+    SCUOLA ||--o{ SENSORE : "possiede"
+    SENSORE ||--o{ LETTURA : "genera"
+  </div>
+</body>
+</html>
