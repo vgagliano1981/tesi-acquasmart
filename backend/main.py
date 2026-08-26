@@ -512,6 +512,11 @@ def storico_confronti(scuola_id: int = None, db: Session = Depends(get_db)):
         })
     return risultati
 
+from backend.mqtt_client import last_debug_info
+@app.get("/api/debug_mqtt")
+def get_debug_mqtt():
+    return last_debug_info
+
 # Mount static files (Frontend HTML/CSS/JS)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 

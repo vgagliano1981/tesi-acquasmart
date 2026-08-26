@@ -9,11 +9,17 @@ MQTT_BROKER = "broker.emqx.io"
 MQTT_PORT = 1883
 MQTT_TOPIC = "tesi/catania/scuole/#"
 
+last_debug_info = {"msg": None, "error": None, "connected": False}
+
 def on_connect(client, userdata, flags, rc, properties=None):
+    global last_debug_info
+    last_debug_info["connected"] = True
     print(f"Connected to MQTT Broker with result code {rc}")
     client.subscribe(MQTT_TOPIC)
 
 def on_message(client, userdata, msg):
+    global last_debug_info
+    last_debug_info["msg"] = msg.topic
     try:
         payload = json.loads(msg.payload.decode())
         topic = msg.topic
@@ -62,6 +68,7 @@ def on_message(client, userdata, msg):
             )
             db.add(lettura)
             db.commit()
+            last_debug_info["error"] = "No error (Success)"
             
             # Simulated Email Sending
             if is_anomalia:
@@ -89,21 +96,26 @@ def on_message(client, userdata, msg):
         
         print(f"Received {valore} on {topic} -> Anomaly: {is_anomalia}")
     except Exception as e:
+        last_debug_info["error"] = str(e)
         print(f"Error processing MQTT message: {e}")
 
+# Maintain global client reference
+mqtt_client_instance = None
+
 def start_mqtt():
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    client.on_connect = on_connect
-    client.on_message = on_message
+    global mqtt_client_instance
+    mqtt_client_instance = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    mqtt_client_instance.on_connect = on_connect
+    mqtt_client_instance.on_message = on_message
     
     import time
     while True:
         try:
-            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            mqtt_client_instance.connect(MQTT_BROKER, MQTT_PORT, 60)
             print("Client MQTT FastAPI connesso con successo!")
             break
         except Exception as e:
             print(f"Errore connessione MQTT backend: {e}. Riprovo tra 5 secondi...")
             time.sleep(5)
             
-    client.loop_start() # Run in background
+    mqtt_client_instance.loop_start() # Run in background
