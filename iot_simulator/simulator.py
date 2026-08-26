@@ -95,6 +95,7 @@ def start_simulation():
                         "ground_truth_type": anomaly_type
                     }
                     client.publish(sub["topic"], json.dumps(payload))
+                    time.sleep(0.05) # Previene il rate-limiting del broker EMQX
                 
                 # Generazione Contatore Principale
                 if main_sensor:
@@ -117,6 +118,7 @@ def start_simulation():
                         "ground_truth_type": anomaly_type
                     }
                     client.publish(main_sensor["topic"], json.dumps(payload))
+                    time.sleep(0.05)
 
                 # Generazione sensori di Pressione
                 for p_sensor in pressure_sensors:
@@ -143,6 +145,7 @@ def start_simulation():
                         "ground_truth_type": anomaly_type
                     }
                     client.publish(p_sensor["topic"], json.dumps(payload))
+                    time.sleep(0.05)
 
                 # Generazione sensori di Torbidità
                 for t_sensor in turbidity_sensors:
@@ -161,6 +164,7 @@ def start_simulation():
                         "ground_truth_type": anomaly_type
                     }
                     client.publish(t_sensor["topic"], json.dumps(payload))
+                    time.sleep(0.05)
 
                 # Generazione sensori di Conducibilità
                 for c_sensor in conductivity_sensors:
@@ -179,6 +183,7 @@ def start_simulation():
                         "ground_truth_type": anomaly_type
                     }
                     client.publish(c_sensor["topic"], json.dumps(payload))
+                    time.sleep(0.05)
             
             # Attende prima di un nuovo ciclo globale
             time.sleep(60)
