@@ -51,6 +51,26 @@ async def startup_event():
     start_mqtt()
     db = SessionLocal()
     try:
+        # Patch per sistemare i sensori precedentemente associati tutti alla scuola 1
+        sensori_esistenti = db.query(Sensore).all()
+        for s in sensori_esistenti:
+            if s.topic_mqtt:
+                try:
+                    parti = s.topic_mqtt.split("/")
+                    if len(parti) > 3 and parti[2] == "scuole":
+                        scuola_corretta = int(parti[3])
+                        if s.scuola_id != scuola_corretta:
+                            s.scuola_id = scuola_corretta
+                except Exception:
+                    pass
+        db.commit()
+    except Exception as e:
+        print(f"Errore durante la patch dei sensori: {e}")
+    finally:
+        db.close()
+        
+    db = SessionLocal()
+    try:
         if not db.query(models.User).filter(models.User.username == "amministratore").first():
             db.add(models.User(username="amministratore", password_hash=get_password_hash("amministratore"), role="amministratore"))
         if not db.query(models.User).filter(models.User.username == "guest").first():

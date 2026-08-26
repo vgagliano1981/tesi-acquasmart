@@ -33,8 +33,25 @@ def on_message(client, userdata, msg):
             # Trova il sensore o crealo
             sensore = db.query(Sensore).filter(Sensore.topic_mqtt == topic).first()
             if not sensore:
-                # Per il prototipo, se il sensore non esiste lo creiamo associato alla scuola 1 (default)
-                sensore = Sensore(scuola_id=1, tipo="Acqua", topic_mqtt=topic)
+                # Estrai dinamicamente l'ID della scuola dal topic (es. tesi/catania/scuole/2/...)
+                scuola_id_estratto = 1
+                tipo_sensore = "Acqua"
+                try:
+                    parti = topic.split("/")
+                    if len(parti) > 3 and parti[2] == "scuole":
+                        scuola_id_estratto = int(parti[3])
+                    
+                    ultimo = parti[-1].lower()
+                    if "pressione" in ultimo:
+                        tipo_sensore = "Pressione"
+                    elif "torbidita" in ultimo:
+                        tipo_sensore = "Torbidità"
+                    elif "conducibilita" in ultimo:
+                        tipo_sensore = "Conducibilità"
+                except Exception:
+                    pass
+                
+                sensore = Sensore(scuola_id=scuola_id_estratto, tipo=tipo_sensore, topic_mqtt=topic)
                 db.add(sensore)
                 db.commit()
                 db.refresh(sensore)
