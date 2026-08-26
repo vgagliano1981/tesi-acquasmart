@@ -12,6 +12,10 @@ models.Base.metadata.create_all(bind=engine)
 
 def populate_if_empty():
     try:
+        if os.path.exists('iot_platform.db'):
+            os.remove('iot_platform.db')
+            print("Database SQLite locale rimosso per forzare la rigenerazione completa.")
+            
         conn = sqlite3.connect('iot_platform.db')
         cursor = conn.cursor()
         
