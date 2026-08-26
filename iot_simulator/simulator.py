@@ -5,7 +5,7 @@ import json
 import sqlite3
 from collections import defaultdict
 
-MQTT_BROKER = "broker.hivemq.com"
+MQTT_BROKER = "broker.emqx.io"
 MQTT_PORT = 1883
 
 def get_scuole_sensori():
@@ -181,7 +181,7 @@ def start_simulation():
                     client.publish(c_sensor["topic"], json.dumps(payload))
             
             # Attende prima di un nuovo ciclo globale
-            time.sleep(600)
+            time.sleep(60)
         except Exception as e:
             print(f"Errore nel ciclo di simulazione: {e}")
             time.sleep(10)
