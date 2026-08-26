@@ -5,7 +5,7 @@ import json
 import sqlite3
 from collections import defaultdict
 
-MQTT_BROKER = "test.mosquitto.org"
+MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 
 def get_scuole_sensori():
