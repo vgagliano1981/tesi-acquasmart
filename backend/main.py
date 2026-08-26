@@ -30,7 +30,24 @@ async def startup_event():
         print("Sistema anti-sospensione attivato per il backend.")
     except Exception as e:
         pass
-    
+        
+    # MIGRATION AUTOMATICA PER POSTGRESQL (Render)
+    from sqlalchemy import text
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS is_ground_truth_anomaly BOOLEAN DEFAULT FALSE"))
+            print("Colonna is_ground_truth_anomaly aggiunta con successo!")
+    except Exception as e:
+        print(f"Errore durante l'aggiunta di is_ground_truth_anomaly: {e}")
+        
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS ground_truth_type VARCHAR"))
+            print("Colonna ground_truth_type aggiunta con successo!")
+    except Exception as e:
+        print(f"Errore durante l'aggiunta di ground_truth_type: {e}")
+
+    # Avvia MQTT nel background
     start_mqtt()
     db = SessionLocal()
     try:
