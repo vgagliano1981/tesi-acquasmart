@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+from datetime import timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 
@@ -13,12 +14,11 @@ def evaluate_metrics():
     print("Inizio calcolo metriche...")
     db = SessionLocal()
     
-    # Prendi tutte le letture dei sensori dell'acqua
-    # Usa un join per essere sicuro che sia "Acqua"
-    letture_acqua = db.query(Lettura).join(Sensore).filter(Sensore.tipo == "Acqua").all()
+    # Prendi tutte le letture dei sensori dell'acqua ordinate per timestamp
+    letture_acqua = db.query(Lettura).join(Sensore).filter(Sensore.tipo == "Acqua").order_by(Lettura.timestamp).all()
     
     total = len(letture_acqua)
-    print(f"Totale letture analizzate: {total}")
+    print(f"Totale letture acquisite: {total}")
     
     if total == 0:
         print("Nessuna lettura trovata.")
@@ -30,16 +30,15 @@ def evaluate_metrics():
     FN = 0
     
     # Per una migliore simulazione dell'analisi (escludere il warm-up)
-    # Ignoriamo le prime 10.000 letture dove il modello si sta adattando
-    WARMUP_PERIOD = 10000
+    # Ignoriamo i primi 14 giorni di training puro
+    min_timestamp = letture_acqua[0].timestamp
+    test_start_time = min_timestamp + timedelta(days=14)
     
-    if total > WARMUP_PERIOD:
-        analyzed_letture = letture_acqua[WARMUP_PERIOD:]
-        print(f"Escluse le prime {WARMUP_PERIOD} letture come warm-up phase.")
-    else:
-        analyzed_letture = letture_acqua
+    analyzed_letture = [l for l in letture_acqua if l.timestamp > test_start_time]
+    print(f"Esclusi i primi 14 giorni come training phase (fino al {test_start_time.strftime('%Y-%m-%d %H:%M')}).")
     
     total_analyzed = len(analyzed_letture)
+    print(f"Totale letture analizzate nel periodo di test: {total_analyzed}")
     
     for l in analyzed_letture:
         if l.is_ground_truth_anomaly:
@@ -70,13 +69,19 @@ def evaluate_metrics():
     print(f"F1-Score:  {f1_score:.4f} ({f1_score*100:.2f}%)")
     
     # Salva in CSV
+    import json
     results = {
         "Metric": ["Total Samples Analyzed", "True Positives (TP)", "True Negatives (TN)", "False Positives (FP)", "False Negatives (FN)", "Precision", "Recall", "F1-Score"],
         "Value": [total_analyzed, TP, TN, FP, FN, precision, recall, f1_score]
     }
     df = pd.DataFrame(results)
     df.to_csv("evaluation_results.csv", index=False)
-    print("\nRisultati esportati in evaluation_results.csv")
+    
+    # Salva anche in JSON per conformità
+    with open("evaluation_results.json", "w") as f:
+        json.dump(results, f, indent=4)
+        
+    print("\nRisultati esportati in evaluation_results.csv e evaluation_results.json")
     
     db.close()
 
