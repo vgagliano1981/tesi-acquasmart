@@ -9,7 +9,7 @@ def capture_screenshots():
         
         # 1. Login
         print("Navigating to login...")
-        page.goto("https://tesi-acquasmart.onrender.com/login.html", wait_until="networkidle")
+        page.goto("http://localhost:10000/login.html", wait_until="networkidle")
         time.sleep(2)
         page.screenshot(path="c:/Pregetto_tesi_sperimentale/screenshot_1_login.png")
         

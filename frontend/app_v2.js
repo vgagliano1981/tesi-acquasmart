@@ -491,7 +491,7 @@ async function checkAllarmi() {
                     <td><strong>${a.scuola_nome}</strong><br><small>${a.sensore_nome}</small></td>
                     <td style="color: var(--danger); font-weight: bold;">${a.valore_litri.toFixed(2)} ${unita}</td>
                     <td>${causaMsg}</td>
-                    <td><span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Inviata a vitogagliano@gmail.com</span></td>
+                    <td><span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Inviata a prova@mail.it</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -539,7 +539,7 @@ document.getElementById('btn-export-alarms').addEventListener('click', async () 
             const oraStr = dt.toLocaleTimeString();
             const litri = a.valore_litri.toFixed(2).replace('.', ','); // virgola per decimali in ITA
             const score = a.anomaly_score.toFixed(3).replace('.', ',');
-            const stato = "Inviata a vitogagliano@gmail.com";
+            const stato = "Inviata a prova@mail.it";
             
             // Gestione dei nomi con virgole/puntoevirgola
             const scuola = `"${a.scuola_nome}"`;
