@@ -11,39 +11,14 @@ print("Creazione tabelle DB se non esistono...")
 models.Base.metadata.create_all(bind=engine)
 
 def populate_if_empty():
+    from backend.database import SessionLocal
+    from backend.models import Scuola
     try:
-        if os.path.exists('iot_platform.db'):
-            os.remove('iot_platform.db')
-            print("Database SQLite locale rimosso per forzare la rigenerazione completa.")
-            
-        conn = sqlite3.connect('iot_platform.db')
-        cursor = conn.cursor()
+        db = SessionLocal()
+        count = db.query(Scuola).count()
+        db.close()
         
-        # Crea le tabelle in SQLite se non esistono (necessario per il simulatore in cloud)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS scuole (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                indirizzo TEXT,
-                numero_studenti INTEGER,
-                codice_meccanografico TEXT
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS sensori (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                scuola_id INTEGER,
-                tipo TEXT,
-                topic_mqtt TEXT,
-                nome TEXT,
-                is_main INTEGER,
-                FOREIGN KEY (scuola_id) REFERENCES scuole (id)
-            )
-        ''')
-        conn.commit()
-        
-        cursor.execute("SELECT COUNT(*) FROM scuole")
-        if cursor.fetchone()[0] == 0:
+        if count == 0:
             print("Database vuoto, avvio script di popolamento automatico...")
             # Importandoli, il loro codice globale verrà eseguito, popolando il db
             import backend.populate_db
@@ -57,7 +32,6 @@ def populate_if_empty():
                 pass
         else:
             print("Il database contiene già i dati.")
-        conn.close()
     except Exception as e:
         print("Errore nel popolamento:", e)
 

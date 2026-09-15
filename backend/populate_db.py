@@ -1,8 +1,12 @@
-import sqlite3
+import sys
+import os
 
-# Connessione al database
-conn = sqlite3.connect('iot_platform.db')
-cursor = conn.cursor()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from backend.database import SessionLocal
+from backend.models import Scuola, Sensore
+
+db = SessionLocal()
 
 # Lista delle principali scuole superiori di Catania
 scuole = [
@@ -21,26 +25,25 @@ scuole = [
 # Inserimento nel database
 for index, (nome, indirizzo, studenti, cod_mecc) in enumerate(scuole):
     scuola_id = index + 1
-    cursor.execute('''
-        INSERT INTO scuole (id, nome, indirizzo, numero_studenti, codice_meccanografico)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (scuola_id, nome, indirizzo, studenti, cod_mecc))
+    if not db.query(Scuola).filter(Scuola.id == scuola_id).first():
+        s = Scuola(id=scuola_id, nome=nome, indirizzo=indirizzo, numero_studenti=studenti, codice_meccanografico=cod_mecc)
+        db.add(s)
     
     # Contatore Principale
-    cursor.execute('''
-        INSERT INTO sensori (scuola_id, tipo, topic_mqtt, nome, is_main)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (scuola_id, 'Acqua', f'tesi/catania/scuole/{scuola_id}/sensore_acqua_main', 'Contatore Principale', 1))
+    topic_main = f'tesi/catania/scuole/{scuola_id}/sensore_acqua_main'
+    if not db.query(Sensore).filter(Sensore.topic_mqtt == topic_main).first():
+        s_main = Sensore(scuola_id=scuola_id, tipo='Acqua', topic_mqtt=topic_main, nome='Contatore Principale', is_main=True)
+        db.add(s_main)
     
     # Sotto-sensori fittizi
     sotto_sensori = ["Bagni Studenti PT", "Vasca Antincendio", "Palestra e Docce"]
     for i, sn in enumerate(sotto_sensori):
-        cursor.execute('''
-            INSERT INTO sensori (scuola_id, tipo, topic_mqtt, nome, is_main)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (scuola_id, 'Acqua', f'tesi/catania/scuole/{scuola_id}/sub_{i+1}', sn, 0))
+        topic_sub = f'tesi/catania/scuole/{scuola_id}/sub_{i+1}'
+        if not db.query(Sensore).filter(Sensore.topic_mqtt == topic_sub).first():
+            s_sub = Sensore(scuola_id=scuola_id, tipo='Acqua', topic_mqtt=topic_sub, nome=sn, is_main=False)
+            db.add(s_sub)
 
-conn.commit()
-conn.close()
+db.commit()
+db.close()
 
-print("Scuole e Sensori di Catania importati con successo nel database!")
+print("Scuole e Sensori di Catania importati con successo nel database SQLAlchemy!")

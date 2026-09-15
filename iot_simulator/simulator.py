@@ -10,20 +10,24 @@ MQTT_PORT = 1883
 
 def get_scuole_sensori():
     try:
-        conn = sqlite3.connect('iot_platform.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT scuola_id, topic_mqtt, is_main, nome, tipo FROM sensori')
-        rows = cursor.fetchall()
-        conn.close()
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from backend.database import SessionLocal
+        from backend.models import Sensore
+        
+        db = SessionLocal()
+        sensori = db.query(Sensore).all()
         
         scuole = defaultdict(list)
-        for row in rows:
-            scuole[row[0]].append({
-                "topic": row[1],
-                "is_main": bool(row[2]),
-                "nome": row[3],
-                "tipo": row[4]
+        for s in sensori:
+            scuole[s.scuola_id].append({
+                "topic": s.topic_mqtt,
+                "is_main": bool(s.is_main),
+                "nome": s.nome,
+                "tipo": s.tipo
             })
+        db.close()
         return scuole
     except Exception as e:
         print(f"Errore lettura DB: {e}")
