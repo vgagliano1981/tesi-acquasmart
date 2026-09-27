@@ -16,7 +16,18 @@ from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordBearer
 from .auth import verify_password, get_password_hash, create_access_token, SECRET_KEY, ALGORITHM
 
-models.Base.metadata.create_all(bind=engine)
+import traceback
+
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    with open("startup_error.txt", "w") as f:
+        f.write(traceback.format_exc())
+    # Fallback to sqlite to prevent crash loop
+    from sqlalchemy import create_engine
+    engine = create_engine("sqlite:///./iot_platform.db", connect_args={"check_same_thread": False})
+    SessionLocal.configure(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="IoT Water Monitoring")
 
@@ -561,6 +572,14 @@ from backend.mqtt_client import last_debug_info
 @app.get("/api/debug_mqtt")
 def get_debug_mqtt():
     return last_debug_info
+
+@app.get("/api/get_startup_error")
+def get_startup_error():
+    import os
+    if os.path.exists("startup_error.txt"):
+        with open("startup_error.txt", "r") as f:
+            return {"error": f.read()}
+    return {"error": "Nessun errore di startup registrato."}
 
 # Mount static files (Frontend HTML/CSS/JS)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
