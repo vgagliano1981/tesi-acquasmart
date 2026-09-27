@@ -125,14 +125,19 @@ def start_mqtt():
     mqtt_client_instance.on_connect = on_connect
     mqtt_client_instance.on_message = on_message
     
+    import threading
     import time
-    while True:
-        try:
-            mqtt_client_instance.connect(MQTT_BROKER, MQTT_PORT, 60)
-            print("Client MQTT FastAPI connesso con successo!")
-            break
-        except Exception as e:
-            print(f"Errore connessione MQTT backend: {e}. Riprovo tra 5 secondi...")
-            time.sleep(5)
-            
-    mqtt_client_instance.loop_start() # Run in background
+    
+    def connect_loop():
+        while True:
+            try:
+                mqtt_client_instance.connect(MQTT_BROKER, MQTT_PORT, 60)
+                print("Client MQTT FastAPI connesso con successo!")
+                mqtt_client_instance.loop_start() # Run in background
+                break
+            except Exception as e:
+                print(f"Errore connessione MQTT backend: {e}. Riprovo tra 5 secondi...")
+                time.sleep(5)
+                
+    # Run the connection loop in a separate thread to prevent blocking Uvicorn startup
+    threading.Thread(target=connect_loop, daemon=True).start()
