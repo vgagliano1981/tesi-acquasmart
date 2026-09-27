@@ -71,10 +71,18 @@ async def startup_event():
         
     db = SessionLocal()
     try:
-        if not db.query(models.User).filter(models.User.username == "amministratore").first():
+        user_admin = db.query(models.User).filter(models.User.username == "amministratore").first()
+        if not user_admin:
             db.add(models.User(username="amministratore", password_hash=get_password_hash("amministratore"), role="amministratore"))
-        if not db.query(models.User).filter(models.User.username == "guest").first():
+        else:
+            user_admin.password_hash = get_password_hash("amministratore")
+            
+        user_guest = db.query(models.User).filter(models.User.username == "guest").first()
+        if not user_guest:
             db.add(models.User(username="guest", password_hash=get_password_hash("guest"), role="guest"))
+        else:
+            user_guest.password_hash = get_password_hash("guest")
+            
         db.commit()
     finally:
         db.close()

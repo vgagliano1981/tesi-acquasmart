@@ -26,6 +26,9 @@ def generate_historical_offline():
     db.query(Lettura).delete()
     db.commit()
     
+    random.seed(42)
+    np.random.seed(42)
+    
     sensori_acqua = db.query(Sensore).filter(Sensore.tipo == "Acqua").all()
     if not sensori_acqua:
         print("Nessun sensore d'acqua trovato.")
@@ -40,8 +43,8 @@ def generate_historical_offline():
         else:
             scuole_sensori_acqua[s.scuola_id]['subs'].append(s)
 
-    start_date = datetime.now() - timedelta(days=60)
-    end_date = datetime.now()
+    start_date = datetime(2023, 1, 1)
+    end_date = start_date + timedelta(days=60)
     step_minutes = 10
     total_steps = int((end_date - start_date).total_seconds() / (step_minutes * 60))
     
