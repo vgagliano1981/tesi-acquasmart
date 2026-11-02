@@ -31,13 +31,6 @@ except Exception as e:
 
 app = FastAPI(title="IoT Water Monitoring")
 
-from fastapi.responses import JSONResponse
-from fastapi import Request
-
-@app.middleware("http")
-async def disable_service_middleware(request: Request, call_next):
-    return JSONResponse(status_code=503, content={"detail": "Servizio temporaneamente disabilitato per manutenzione."})
-
 # Start MQTT Background Task
 @app.on_event("startup")
 async def startup_event():
@@ -50,27 +43,28 @@ async def startup_event():
         pass
         
     # MIGRATION AUTOMATICA PER POSTGRESQL (Render)
-    from sqlalchemy import text
-    try:
-        with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS is_ground_truth_anomaly BOOLEAN DEFAULT FALSE"))
-            print("Colonna is_ground_truth_anomaly aggiunta con successo!")
-    except Exception as e:
-        print(f"Errore durante l'aggiunta di is_ground_truth_anomaly: {e}")
-        
-    try:
-        with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS ground_truth_type VARCHAR"))
-            print("Colonna ground_truth_type aggiunta con successo!")
-    except Exception as e:
-        print(f"Errore durante l'aggiunta di ground_truth_type: {e}")
+    if "sqlite" not in str(engine.url):
+        from sqlalchemy import text
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS is_ground_truth_anomaly BOOLEAN DEFAULT FALSE"))
+                print("Colonna is_ground_truth_anomaly aggiunta con successo!")
+        except Exception as e:
+            print(f"Errore durante l'aggiunta di is_ground_truth_anomaly: {e}")
+            
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE letture ADD COLUMN IF NOT EXISTS ground_truth_type VARCHAR"))
+                print("Colonna ground_truth_type aggiunta con successo!")
+        except Exception as e:
+            print(f"Errore durante l'aggiunta di ground_truth_type: {e}")
 
     # Avvia MQTT nel background
     start_mqtt()
     db = SessionLocal()
     try:
         # Patch per sistemare i sensori precedentemente associati tutti alla scuola 1
-        sensori_esistenti = db.query(Sensore).all()
+        sensori_esistenti = db.query(models.Sensore).all()
         for s in sensori_esistenti:
             if s.topic_mqtt:
                 try:
@@ -89,20 +83,21 @@ async def startup_event():
         
     db = SessionLocal()
     try:
-        pass
-        # user_admin = db.query(models.User).filter(models.User.username == "amministratore").first()
-        # if not user_admin:
-        #     db.add(models.User(username="amministratore", password_hash=get_password_hash("amministratore"), role="amministratore"))
-        # else:
-        #     user_admin.password_hash = get_password_hash("amministratore")
-        #     
-        # user_guest = db.query(models.User).filter(models.User.username == "guest").first()
-        # if not user_guest:
-        #     db.add(models.User(username="guest", password_hash=get_password_hash("guest"), role="guest"))
-        # else:
-        #     user_guest.password_hash = get_password_hash("guest")
-        #     
-        # db.commit()
+        user_admin = db.query(models.User).filter(models.User.username == "amministratore").first()
+        if not user_admin:
+            db.add(models.User(username="amministratore", password_hash=get_password_hash("amministratore"), role="amministratore"))
+        else:
+            user_admin.password_hash = get_password_hash("amministratore")
+            
+        user_guest = db.query(models.User).filter(models.User.username == "guest").first()
+        if not user_guest:
+            db.add(models.User(username="guest", password_hash=get_password_hash("guest"), role="guest"))
+        else:
+            user_guest.password_hash = get_password_hash("guest")
+            
+        db.commit()
+    except Exception as e:
+        print(f"Errore inizializzazione utenti: {e}")
     finally:
         db.close()
 

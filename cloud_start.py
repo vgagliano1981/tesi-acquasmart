@@ -8,7 +8,10 @@ from backend.database import engine
 from backend import models
 
 print("Creazione tabelle DB se non esistono...")
-models.Base.metadata.create_all(bind=engine)
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print("Avviso durante create_all delle tabelle:", e)
 
 def populate_if_empty():
     from backend.database import SessionLocal
